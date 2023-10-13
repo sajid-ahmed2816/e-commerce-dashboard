@@ -1,24 +1,44 @@
-import logo from './logo.svg';
-import './App.css';
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Routes,
+  Route,
+} from "react-router-dom";
+import { createTheme, ThemeProvider } from "@mui/material";
+import colors from "./styles/colors";
+import adminRoutes from "./routes/admin.routes";
+import { Layout } from "./layouts/Layout";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: colors.primary,
+      contrastText: "#ffffff",
+    },
+    secondary: {
+      main: colors.secondary,
+      contrastText: "#ffffff",
+    },
+    typography: {
+      fontFamily: ["Roboto", "sans-serif"].join(","),
+    },
+  },
+});
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            {adminRoutes.map((item, index) => (
+              <Route key={index} path={item.path} element={item.component} />
+            ))}
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
