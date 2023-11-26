@@ -2,6 +2,8 @@ import React, { Fragment } from "react";
 import { Box } from "@mui/material";
 import SideNav from "./SideNav";
 import { Outlet } from "react-router-dom";
+import Header from "./Header";
+import AppbarBreadcrumb from "../components/BreadCrumb/AppbarBreadCrumb";
 
 export const Layout = ({ children }) => {
   return (
@@ -10,7 +12,8 @@ export const Layout = ({ children }) => {
         <Box>
           <SideNav />
         </Box>
-        <Box sx={{ mt: "100px", mx: 2, flexGrow: 1 }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <Header />
           <Outlet />
         </Box>
       </Box>

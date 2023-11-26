@@ -9,9 +9,13 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  IconButton,
+  CardMedia,
+  Typography,
 } from "@mui/material";
 import Navigation from "../Navigation";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Images } from "../assets/images/Images";
 const drawerWidth = 240;
 
 export default function SideNav() {
@@ -35,7 +39,20 @@ export default function SideNav() {
         variant="permanent"
         anchor="left"
       >
-        <Toolbar />
+        <Toolbar sx={{ gap: "20px" }}>
+          <Box component={"span"}>
+            <CardMedia
+              component={"img"}
+              src={Images.logo}
+              width={"50px"}
+              height={"50px"}
+              sx={{
+                objectFit: "contain",
+              }}
+            />
+          </Box>
+          <Typography>Fashion Store</Typography>
+        </Toolbar>
         <Divider />
         <List>
           {Navigation.map((item, index) => (
