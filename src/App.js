@@ -1,3 +1,6 @@
+import adminRoutes from "./routes/admin.routes";
+import { Layout } from "./layouts/Layout";
+import publicRoutes from "./routes/public.routes";
 import {
   BrowserRouter,
   Navigate,
@@ -6,9 +9,7 @@ import {
   Route,
 } from "react-router-dom";
 import { createTheme, ThemeProvider } from "@mui/material";
-import colors from "./styles/colors";
-import adminRoutes from "./routes/admin.routes";
-import { Layout } from "./layouts/Layout";
+import colors from "./assets/styles/colors";;
 
 const theme = createTheme({
   palette: {
@@ -33,6 +34,11 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             {adminRoutes.map((item, index) => (
+              <Route key={index} path={item.path} element={item.component} />
+            ))}
+          </Route>
+          <Route element={<Outlet />}>
+            {publicRoutes.map((item, index) => (
               <Route key={index} path={item.path} element={item.component} />
             ))}
           </Route>

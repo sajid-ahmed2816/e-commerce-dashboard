@@ -4,7 +4,7 @@ import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Chip from "@mui/material/Chip";
 import HomeIcon from "@mui/icons-material/Home";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import colors from "../../styles/colors";
+import colors from "../../assets/styles/colors";
 
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
   const backgroundColor =

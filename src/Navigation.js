@@ -1,5 +1,5 @@
 import { Dashboard, Group, ListAlt, LocalOffer } from "@mui/icons-material";
-import colors from "./styles/colors";
+import colors from "./assets/styles/colors";
 
 const styles = {
   iconSize: {
