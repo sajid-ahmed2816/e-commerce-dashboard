@@ -1,10 +1,10 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import { emphasize, styled } from "@mui/material/styles";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Chip from "@mui/material/Chip";
 import HomeIcon from "@mui/icons-material/Home";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import colors from "../../assets/styles/colors";
+import { useLocation } from "react-router-dom";
 
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
   const backgroundColor =
@@ -32,20 +32,20 @@ function handleClick(event) {
 }
 
 export default function AppbarBreadCrumb() {
+  const location = useLocation();
+  const [currentPathName, setCurrentPathName] = useState(location.pathname);
+  useEffect(() => {
+    setCurrentPathName(location.pathname);
+  }, [location.pathname])
   return (
     <div role="presentation" onClick={handleClick} style={{ margin: "15px" }}>
       <Breadcrumbs aria-label="breadcrumb" sx={{ color: colors.primary }}>
         <StyledBreadcrumb
           component="a"
           href="#"
-          label="Home"
+          // label="Home"
+          label={currentPathName}
           icon={<HomeIcon fontSize="small" />}
-        />
-        <StyledBreadcrumb component="a" href="#" label="Catalog" />
-        <StyledBreadcrumb
-          label="Accessories"
-          deleteIcon={<ExpandMoreIcon />}
-          onDelete={handleClick}
         />
       </Breadcrumbs>
     </div>
