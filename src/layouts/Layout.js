@@ -3,17 +3,14 @@ import { Box } from "@mui/material";
 import SideNav from "./SideNav";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
-import AppbarBreadcrumb from "../components/BreadCrumb/AppbarBreadCrumb";
 
-export const Layout = ({ children }) => {
+export const Layout = () => {
   return (
     <Fragment>
-      <Box sx={{ display: "flex" }}>
-        <Box>
-          <SideNav />
-        </Box>
-        <Box sx={{ flexGrow: 1 }}>
-          <Header />
+      <Header />
+      <Box component={"main"} sx={{ display: "flex", height: "100vh" }}>
+        <SideNav />
+        <Box sx={{ flexGrow: 1, mt: "76px", mx: 2, mb: 1 }}>
           <Outlet />
         </Box>
       </Box>

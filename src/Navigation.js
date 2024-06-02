@@ -1,4 +1,4 @@
-import { Dashboard, Group, ListAlt, LocalOffer } from "@mui/icons-material";
+import { Dashboard, Category, ListAlt, Workspaces } from "@mui/icons-material";
 import colors from "./assets/styles/colors";
 
 const styles = {
@@ -16,14 +16,32 @@ const Navigation = [
     path: "/",
   },
   {
-    label: "Customers",
-    icon: <Group sx={styles.iconSize} />,
-    path: "/customers",
+    label: "Manage Categories",
+    icon: <Category sx={styles.iconSize} />,
+    subMenu: [
+      {
+        label: "Create Category",
+        path: "/create-category"
+      },
+      {
+        label: "All Categories",
+        path: "/categories"
+      },
+    ]
   },
   {
-    label: "Products",
-    icon: <LocalOffer sx={styles.iconSize} />,
-    path: "/products",
+    label: "Manage Products",
+    icon: <Workspaces sx={styles.iconSize} />,
+    subMenu: [
+      {
+        label: "Create Product",
+        path: "/create-product",
+      },
+      {
+        label: "All Products",
+        path: "/products",
+      },
+    ]
   },
   {
     label: "Orders",

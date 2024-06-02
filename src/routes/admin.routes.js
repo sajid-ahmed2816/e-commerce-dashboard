@@ -1,7 +1,9 @@
-import Dashboard from "../views/Dashboard/Dashboard";
-import Customers from "../views/Customers/Customers";
-import Orders from "../views/Orders/Orders";
-import Products from "../views/Products/Products";
+import Dashboard from "../views/Dashboard";
+import Orders from "../views/Orders";
+import Products from "../views/Products/all_products";
+import CreateProduct from "../views/Products/create_product";
+import Categories from "../views/Categories/all_categories";
+import CreateCategory from "../views/Categories/create_category";
 
 const adminRoutes = [
   {
@@ -9,16 +11,24 @@ const adminRoutes = [
     component: <Dashboard />,
   },
   {
-    path: "/customers",
-    component: <Customers />,
-  },
-  {
     path: "/orders",
     component: <Orders />,
   },
   {
+    path: "/create-product",
+    component: <CreateProduct />,
+  },
+  {
     path: "/products",
     component: <Products />,
+  },
+  {
+    path: "/create-category",
+    component: <CreateCategory />,
+  },
+  {
+    path: "/categories",
+    component: <Categories />,
   },
 ];
 

@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { emphasize, styled } from "@mui/material/styles";
-import Breadcrumbs from "@mui/material/Breadcrumbs";
-import Chip from "@mui/material/Chip";
-import HomeIcon from "@mui/icons-material/Home";
+import { Breadcrumbs, Chip } from "@mui/material";
+import { Home } from "@mui/icons-material";
 import colors from "../../assets/styles/colors";
-import { useLocation } from "react-router-dom";
 
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
   const backgroundColor =
@@ -30,24 +28,20 @@ function handleClick(event) {
   event.preventDefault();
   console.info("You clicked a breadcrumb.");
 }
+function BreadCrumb({ currentPage }) {
 
-export default function AppbarBreadCrumb() {
-  const location = useLocation();
-  const [currentPathName, setCurrentPathName] = useState(location.pathname);
-  useEffect(() => {
-    setCurrentPathName(location.pathname);
-  }, [location.pathname])
   return (
     <div role="presentation" onClick={handleClick} style={{ margin: "15px" }}>
       <Breadcrumbs aria-label="breadcrumb" sx={{ color: colors.primary }}>
         <StyledBreadcrumb
           component="a"
-          href="#"
-          // label="Home"
-          label={currentPathName}
-          icon={<HomeIcon fontSize="small" />}
+          href="/"
+          label={"Home" + " " + "/" + " " + currentPage}
+          icon={<Home sx={{ fontSize: "18px" }} />}
         />
       </Breadcrumbs>
     </div>
   );
 }
+
+export default BreadCrumb;
