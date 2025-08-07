@@ -1,5 +1,5 @@
 const AuthRoutes = {
-  login: "/auth/login",
+  login: "/auth/admin/login",
 }
 
 export default AuthRoutes;

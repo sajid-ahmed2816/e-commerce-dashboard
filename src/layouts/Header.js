@@ -1,18 +1,20 @@
-import * as React from "react";
+import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
   Typography,
-  IconButton,
-  Menu,
-  MenuItem
+  Box
 } from "@mui/material";
-import { AccountCircle } from "@mui/icons-material";
 import BreadCrumb from "../components/BreadCrumb";
+import Navigation from "../Navigation";
 
 export default function Header() {
-  const [auth, setAuth] = React.useState(true);
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [auth, setAuth] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const { pathname } = useLocation();
+
+  const currentPage = Navigation.find((nav) => nav.path == pathname)?.label;
 
   const handleChange = (event) => {
     setAuth(event.target.checked);
@@ -34,40 +36,13 @@ export default function Header() {
       }}
     >
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" sx={{ flex: 1, px: 7 }}>
           Fashion Store
         </Typography>
         {auth && (
-          <div>
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              <MenuItem onClick={handleClose}>Profile</MenuItem>
-              <MenuItem onClick={handleClose}>My account</MenuItem>
-            </Menu>
-          </div>
+          <Box sx={{ flex: 1, display: "grid", justifyContent: "flex-end" }}>
+            <BreadCrumb currentPage={currentPage} />
+          </Box>
         )}
       </Toolbar>
     </AppBar>

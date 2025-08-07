@@ -14,13 +14,18 @@ import { ExpandLess, ExpandMore, Adjust } from "@mui/icons-material";
 import Navigation from "../Navigation";
 import { useNavigate, useLocation } from "react-router-dom";
 import colors from "../assets/styles/colors";
-const drawerWidth = 300;
+import "@fontsource/comfortaa";
+import useAuth from "../hooks/useAuth";
+import useToast from "../hooks/useToast";
+
+const drawerWidth = 290;
 
 export default function SideNav() {
   const [expand, setExpand] = useState({});
-  console.log("🚀 ~ SideNav ~ expand:", expand)
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { userLogout } = useAuth();
+  const { showToast } = useToast();
 
   const handleToggleExpand = (item) => {
     const name = item.label;
@@ -30,41 +35,39 @@ export default function SideNav() {
   }
 
   const handleItemClick = (item) => {
-    navigate(item.path);
+    if (item.path !== "/logout") {
+      navigate(item.path);
+    } else {
+      userLogout();
+      navigate("/login");
+      showToast("Logged out successfully", "error");
+    }
   };
+
   return (
     <Drawer
+      PaperProps={{
+        elevation: 4
+      }}
       sx={{
         width: drawerWidth,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: 290,
+          width: 278,
           boxSizing: "border-box",
           background: colors.primary,
           top: 76,
-          left: 10,
-          height: "87.2%",
-          boxShadow: "2px 2px 4px -1px rgba(0, 0, 0, 0.2), 4px 4px 5px 0px rgba(0, 0, 0, 0.14), 4px 1px 10px 2px rgba(0, 0, 0, 0.12)",
+          height: "calc(100vh - 86px)",
           border: "none",
-          borderRadius: "6px"
+          borderRadius: "6px",
+          ml: "12px"
         },
       }}
       variant="permanent"
       anchor="left"
     >
-      <Toolbar />
-      <List
-        sx={{
-          color: colors.white,
-          "svg": {
-            "path": {
-              fill: colors.white
-            },
-            "circle": {
-              color: colors.white
-            }
-          }
-        }}>
+      {/* <Toolbar /> */}
+      <List>
         {Navigation.map((item, index) => item.subMenu ? (
           <Fragment key={index}>
             <ListItem
@@ -78,7 +81,7 @@ export default function SideNav() {
                 >
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={item.label} />
+                <ListItemText primary={item.label} sx={{ "& .MuiTypography-root": { fontFamily: "Comfortaa" } }} />
                 {expand[item.label] ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
@@ -123,15 +126,17 @@ export default function SideNav() {
         ) : (
           <ListItem key={index}>
             <ListItemButton
-              onClick={() => {
-                handleItemClick(item);
-              }}
+              onClick={() => handleItemClick(item)}
               sx={{
                 background: pathname == item.path ? colors.white : colors.primary,
                 color: pathname == item.path ? colors.primary : colors.white,
                 borderRadius: "4px",
+                gap: 1,
                 "svg": {
                   "path": {
+                    fill: pathname == item.path ? colors.primary : colors.white,
+                  },
+                  "circle": {
                     fill: pathname == item.path ? colors.primary : colors.white,
                   }
                 },
@@ -141,12 +146,15 @@ export default function SideNav() {
                   "svg": {
                     "path": {
                       fill: colors.primary
+                    },
+                    "circle": {
+                      fill: colors.primary
                     }
                   }
                 }
               }}
             >
-              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemIcon sx={{ minWidth: "25px" }}>{item.icon}</ListItemIcon>
               <ListItemText>{item.label}</ListItemText>
             </ListItemButton>
           </ListItem>

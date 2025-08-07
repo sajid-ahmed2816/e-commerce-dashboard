@@ -22,13 +22,14 @@ const StyledBreadcrumb = styled(Chip)(({ theme }) => {
       backgroundColor: emphasize(backgroundColor, 0.12),
     },
   };
-}); // TypeScript only: need a type cast here because https://github.com/Microsoft/TypeScript/issues/26591
+});
 
-function handleClick(event) {
-  event.preventDefault();
-  console.info("You clicked a breadcrumb.");
-}
+
 function BreadCrumb({ currentPage }) {
+  const handleClick = (event) => {
+    event.preventDefault();
+    console.info("You clicked a breadcrumb.");
+  }
 
   return (
     <div role="presentation" onClick={handleClick} style={{ margin: "15px" }}>

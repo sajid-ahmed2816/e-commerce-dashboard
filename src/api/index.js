@@ -1,4 +1,5 @@
 import Axios from "../axios";
+import { ErrorHandler } from "../utils/ErrorHandler";
 
 export const get = async (endPoint, param) => {
   try {
@@ -6,7 +7,7 @@ export const get = async (endPoint, param) => {
     if (result.status == 200) return result.data;
     else throw result;
   } catch (error) {
-    throw error;
+    throw ErrorHandler(error);
   }
 }
 
@@ -16,7 +17,7 @@ export const post = async (endPoint, data) => {
     if (result.status == 200) return result.data;
     else throw result;
   } catch (error) {
-    throw error;
+    throw ErrorHandler(error);
   }
 }
 
@@ -26,7 +27,7 @@ export const patch = async (endPoint, data) => {
     if (result.status == 200) return result.data;
     else throw result;
   } catch (error) {
-    throw error;
+    throw ErrorHandler(error);
   }
 }
 
@@ -36,6 +37,6 @@ export const deleted = async (endPoint) => {
     if (result.status == 200) return result.data;
     else throw result;
   } catch (error) {
-    throw error;
+    throw ErrorHandler(error);
   }
 }

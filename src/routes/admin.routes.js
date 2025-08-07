@@ -4,6 +4,10 @@ import Products from "../views/Products/all_products";
 import CreateProduct from "../views/Products/create_product";
 import Categories from "../views/Categories/all_categories";
 import CreateCategory from "../views/Categories/create_category";
+import Banners from "../views/Banners";
+import Users from "../views/Users";
+import About from "../views/About";
+import Blogs from "../views/Blogs";
 
 const adminRoutes = [
   {
@@ -15,7 +19,7 @@ const adminRoutes = [
     component: <Orders />,
   },
   {
-    path: "/create-product",
+    path: "/products/create-product",
     component: <CreateProduct />,
   },
   {
@@ -23,12 +27,24 @@ const adminRoutes = [
     component: <Products />,
   },
   {
-    path: "/create-category",
-    component: <CreateCategory />,
-  },
-  {
     path: "/categories",
     component: <Categories />,
+  },
+  {
+    path: "/banners",
+    component: <Banners />,
+  },
+  {
+    path: "/users",
+    component: <Users />,
+  },
+  {
+    path: "/about",
+    component: <About />,
+  },
+  {
+    path: "/blogs",
+    component: <Blogs />,
   },
 ];
 

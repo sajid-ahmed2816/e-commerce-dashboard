@@ -9,7 +9,9 @@ import {
   Route,
 } from "react-router-dom";
 import { createTheme, ThemeProvider } from "@mui/material";
-import colors from "./assets/styles/colors";;
+import colors from "./assets/styles/colors";
+import "@fontsource/comfortaa";
+import "./App.css";
 
 const theme = createTheme({
   palette: {
@@ -21,9 +23,9 @@ const theme = createTheme({
       main: colors.secondary,
       contrastText: "#ffffff",
     },
-    typography: {
-      fontFamily: ["Roboto", "sans-serif"].join(","),
-    },
+  },
+  typography: {
+    fontFamily: "Comfortaa",
   },
 });
 

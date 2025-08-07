@@ -10,7 +10,7 @@ export const Layout = () => {
       <Header />
       <Box component={"main"} sx={{ display: "flex", height: "100vh" }}>
         <SideNav />
-        <Box sx={{ flexGrow: 1, mt: "76px", mx: 2, mb: 1 }}>
+        <Box sx={{ flexGrow: 1, mt: "78px", mx: "12px", mb: "12px" }}>
           <Outlet />
         </Box>
       </Box>
