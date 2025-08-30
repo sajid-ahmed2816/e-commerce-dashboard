@@ -9,9 +9,11 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 
-function Dialog({ open, handleClose, title, children }) {
+function Dialog({ maxWidth, fullWidth, open, handleClose, title, component, onSubmit, children }) {
   return (
     <MuiDialog
+      maxWidth={maxWidth}
+      fullWidth={fullWidth}
       open={open}
       onClose={handleClose}
       keepMounted
@@ -28,7 +30,12 @@ function Dialog({ open, handleClose, title, children }) {
           p: 2,
         }}
       >
-        <Grid container spacing={2}>
+        <Grid
+          container
+          spacing={2}
+          component={component}
+          onSubmit={onSubmit}
+        >
           {children}
         </Grid>
       </Box>

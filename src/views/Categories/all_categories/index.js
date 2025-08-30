@@ -1,6 +1,6 @@
-import React, { Fragment, useState } from 'react';
-import { Box, CardMedia, DialogTitle, Grid, Paper, Table, TableBody, TableContainer, TableHead } from '@mui/material';
-import { ImageRounded } from '@mui/icons-material';
+import React, { Fragment, useEffect, useState } from 'react';
+import { Box, CardMedia, Grid, IconButton, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Delete, Edit, ErrorOutline, ImageRounded } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import TableRow from '../../../components/TableRow';
@@ -9,16 +9,28 @@ import Dialog from '../../../components/Dialog';
 import InputField from '../../../components/InputField';
 import UploadService from '../../../api/upload/UploadService';
 import useToast from '../../../hooks/useToast';
+import CategoryServices from '../../../api/categories/CategoryServices';
+import moment from 'moment';
 
 const tableHead = ["S.No", "Image", "Name", "Type", "Created At", "Actions"];
 
 function Categories() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [image, setImage] = useState("");
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
   const { showToast } = useToast();
 
   const handleCategoryDialog = () => setIsCategoryDialogOpen((prevOpen) => !prevOpen);
+  const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
+
+  const setDefaultData = () => {
+    setValue("categoryName", selectedCategory?.name);
+    setValue("type", selectedCategory?.type);
+    setImage(selectedCategory?.image);
+  };
 
   const uploadImage = async (e) => {
     const file = e.target.files[0];
@@ -33,14 +45,94 @@ function Categories() {
     } catch (error) {
       showToast(error, "error");
     }
-  }
+  };
+
+  const createCategory = async (formData) => {
+    const obj = {
+      name: formData.categoryName,
+      type: formData.type,
+      image: image
+    };
+    try {
+      const result = await CategoryServices.createCategory(obj);
+      if (result.status) {
+        showToast(result.message, "success");
+        reset();
+        setImage("");
+        handleCategoryDialog();
+      }
+    } catch (error) {
+      showToast(error, "error");
+    } finally {
+      getCategories();
+    }
+  };
+
+  const updateCategory = async (formData) => {
+    const obj = {
+      name: formData.categoryName,
+      type: formData.type,
+      image: image
+    };
+    try {
+      const result = await CategoryServices.updateCategory(selectedCategory?._id, obj);
+      if (result.status) {
+        showToast(result.message, "success");
+        handleCategoryDialog();
+      }
+    } catch (error) {
+      showToast(error, "error");
+    } finally {
+      getCategories();
+    }
+  };
+
+  const getCategories = async () => {
+    try {
+      const result = await CategoryServices.getCategories();
+      if (result.status) {
+        setCategories(result.data.categories);
+      }
+    } catch (error) {
+      showToast(error, "error")
+    }
+  };
+
+  const deleteCategory = async () => {
+    try {
+      const result = await CategoryServices.deleteCategory(selectedCategory?._id);
+      if (result.status) {
+        showToast(result.message, "success");
+        handleConfirmationDialog();
+      }
+    } catch (error) {
+      showToast(error, "error")
+    } finally {
+      getCategories();
+    }
+  };
+
+  useEffect(() => {
+    getCategories();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCategory != null) {
+      setDefaultData();
+    } else {
+      reset();
+      setImage("");
+    };
+  }, [selectedCategory]);
 
   return (
     <Fragment>
       <Dialog
         open={isCategoryDialogOpen}
         handleClose={handleCategoryDialog}
-        title={"Create Category"}
+        title={selectedCategory == null ? "Create Category" : "Update Category"}
+        component={"form"}
+        onSubmit={handleSubmit(selectedCategory == null ? createCategory : updateCategory)}
       >
         <Grid item md={12}>
           <Grid container spacing={2}>
@@ -94,8 +186,9 @@ function Categories() {
                       label={"Category Name"}
                       fullWidth={true}
                       type={"text"}
+                      value={watch("categoryName")}
                       register={register("categoryName", {
-                        required: "Enter Category Name"
+                        required: "Enter Category Name",
                       })}
                       error={errors?.categoryName && true}
                       helperText={errors?.categoryName?.message}
@@ -109,6 +202,7 @@ function Categories() {
                       label={"Type"}
                       fullWidth={true}
                       type={"text"}
+                      value={watch("type")}
                       register={register("type", {
                         required: "Enter a type"
                       })}
@@ -132,6 +226,32 @@ function Categories() {
           </Grid>
         </Grid>
       </Dialog>
+      <Dialog
+        open={isConfirmationDialogOpen}
+        handleClose={handleConfirmationDialog}
+        title={"Delete Category"}
+      >
+        <Grid item md={12}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1
+            }}
+          >
+            <ErrorOutline sx={{ fontSize: 64, color: colors.red.A400 }} />
+            <Typography sx={{ fontSize: 24, fontWeight: 600 }}>Are you sure?</Typography>
+            <Typography>You wont be able to revert this!</Typography>
+          </Box>
+        </Grid>
+        <Grid item md={6}>
+          <SecondaryButton fullWidth title={"Cancel"} onClick={handleConfirmationDialog} />
+        </Grid>
+        <Grid item md={6}>
+          <PrimaryButton fullWidth title={"Delete"} onClick={deleteCategory} />
+        </Grid>
+      </Dialog>
       <Box
         component={Paper}
         elevation={4}
@@ -150,7 +270,13 @@ function Categories() {
                 justifyContent: "flex-end"
               }}
             >
-              <PrimaryButton title={"Create Category"} onClick={() => handleCategoryDialog()} />
+              <PrimaryButton
+                title={"Create Category"}
+                onClick={() => {
+                  setSelectedCategory(null);
+                  handleCategoryDialog();
+                }}
+              />
             </Box>
           </Grid>
           <Grid item md={12}>
@@ -164,9 +290,41 @@ function Categories() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <TableRow>
-
-                  </TableRow>
+                  {categories.map((item, ind) => (
+                    <TableRow key={ind}>
+                      <TableCell>{ind + 1}</TableCell>
+                      <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.type}</TableCell>
+                      <TableCell>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1
+                          }}
+                        >
+                          <IconButton
+                            onClick={() => {
+                              setSelectedCategory(item);
+                              handleCategoryDialog();
+                            }}
+                          >
+                            <Edit />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => {
+                              setSelectedCategory(item);
+                              handleConfirmationDialog();
+                            }}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>

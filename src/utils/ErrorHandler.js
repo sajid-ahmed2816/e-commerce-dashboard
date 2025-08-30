@@ -1,7 +1,10 @@
 export const ErrorHandler = (error) => {
-  console.log("🚀 ~ ErrorHandler ~ error.response.data.message:", error.response.data.message)
   if (error.response) {
     if (error.response.status == 403) {
+      localStorage.clear();
+      window.location.href = "/login"
+      return error.response.data.message;
+    } else {
       return error.response.data.message;
     }
   }

@@ -11,22 +11,66 @@ import Navigation from "../Navigation";
 
 export default function Header() {
   const [auth, setAuth] = useState(true);
-  const [anchorEl, setAnchorEl] = useState(null);
   const { pathname } = useLocation();
 
-  const currentPage = Navigation.find((nav) => nav.path == pathname)?.label;
+  // const currentPageObj = Navigation.find((nav) =>
+  //   nav?.routes?.some((route) => {
+  //     if (route.includes(":id")) {
+  //       // match dynamic id
+  //       const baseRoute = route.replace("/:id", "");
+  //       return pathname.startsWith(baseRoute);
+  //     }
+  //     return route === pathname;
+  //   })
+  // );
 
-  const handleChange = (event) => {
-    setAuth(event.target.checked);
-  };
+  // // Find index
+  // const index = currentPageObj?.routes?.findIndex((route) => {
+  //   if (route.includes(":id")) {
+  //     const baseRoute = route.replace("/:id", "");
+  //     return pathname.startsWith(baseRoute);
+  //   }
+  //   return route === pathname;
+  // });
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  // const currentPage =
+  //   typeof index === "number"
+  //     ? currentPageObj?.routesLabel[index]
+  //     : currentPageObj?.label;
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const currentPageObj = Navigation.find((nav) =>
+    nav?.routes?.some((route) => {
+      if (route.includes(":id")) {
+        const baseRoute = route.replace("/:id", "");
+        return pathname.startsWith(baseRoute);
+      }
+      return route === pathname;
+    })
+  );
+
+  // Default: null
+  let currentPage = null;
+
+  if (currentPageObj) {
+    const index = currentPageObj.routes?.findIndex((route) => {
+      if (route.includes(":id")) {
+        const baseRoute = route.replace("/:id", "");
+        return pathname.startsWith(baseRoute);
+      }
+      return route === pathname;
+    });
+
+    if (
+      typeof index === "number" &&
+      index >= 0 &&
+      currentPageObj.routesLabel &&
+      currentPageObj.routesLabel[index]
+    ) {
+      currentPage = currentPageObj.routesLabel[index];
+    } else {
+      currentPage = currentPageObj.label;
+    }
+  }
 
   return (
     <AppBar

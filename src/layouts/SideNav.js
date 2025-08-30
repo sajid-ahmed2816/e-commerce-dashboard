@@ -35,8 +35,9 @@ export default function SideNav() {
   }
 
   const handleItemClick = (item) => {
-    if (item.path !== "/logout") {
-      navigate(item.path);
+    console.log("🚀 ~ handleItemClick ~ item:", item)
+    if (!item.includes("/logout")) {
+      navigate(item);
     } else {
       userLogout();
       navigate("/login");
@@ -126,18 +127,18 @@ export default function SideNav() {
         ) : (
           <ListItem key={index}>
             <ListItemButton
-              onClick={() => handleItemClick(item)}
+              onClick={() => handleItemClick(item.routes[0])}
               sx={{
-                background: pathname == item.path ? colors.white : colors.primary,
-                color: pathname == item.path ? colors.primary : colors.white,
+                background: pathname == item.routes[index] ? colors.white : colors.primary,
+                color: pathname == item.routes[index] ? colors.primary : colors.white,
                 borderRadius: "4px",
                 gap: 1,
                 "svg": {
                   "path": {
-                    fill: pathname == item.path ? colors.primary : colors.white,
+                    fill: pathname == item.routes[index] ? colors.primary : colors.white,
                   },
                   "circle": {
-                    fill: pathname == item.path ? colors.primary : colors.white,
+                    fill: pathname == item.routes[index] ? colors.primary : colors.white,
                   }
                 },
                 ":hover": {

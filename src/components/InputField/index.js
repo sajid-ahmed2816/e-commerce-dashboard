@@ -8,18 +8,27 @@ function InputField({
   disabled,
   register,
   error,
-  helperText
+  helperText,
+  value,
+  multiline,
+  rows
 }) {
   return (
     <TextField
       variant={variant}
+      value={value}
       label={label}
       type={type}
       fullWidth={fullWidth}
       disabled={disabled}
       {...register}
-      error={error && true}
+      error={error}
       helperText={helperText}
+      InputLabelProps={{
+        shrink: !!value
+      }}
+      multiline={multiline}
+      rows={rows}
     />
   )
 }

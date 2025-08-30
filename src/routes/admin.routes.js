@@ -8,6 +8,7 @@ import Banners from "../views/Banners";
 import Users from "../views/Users";
 import About from "../views/About";
 import Blogs from "../views/Blogs";
+import UpdateProduct from "../views/Products/update_product";
 
 const adminRoutes = [
   {
@@ -21,6 +22,10 @@ const adminRoutes = [
   {
     path: "/products/create-product",
     component: <CreateProduct />,
+  },
+  {
+    path: "/products/update-product/:id",
+    component: <UpdateProduct />,
   },
   {
     path: "/products",

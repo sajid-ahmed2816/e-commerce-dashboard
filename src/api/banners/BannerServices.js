@@ -8,7 +8,7 @@ const BannerServices = {
   },
 
   getBanners: async (params) => {
-    const result = await get(Routes.createBanner, params);
+    const result = await get(Routes.getBanners, params);
     return result;
   },
 

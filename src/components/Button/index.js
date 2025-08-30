@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import colors from '../../assets/styles/colors';
 
-function PrimaryButton({ title, sx, startIcon, ...props }) {
+function PrimaryButton({ title, sx, startIcon, isLoading, ...props }) {
   return (
     <Button
       variant={"contained"}
@@ -15,7 +15,7 @@ function PrimaryButton({ title, sx, startIcon, ...props }) {
       }}
       {...props}
     >
-      {title}
+      {isLoading ? <CircularProgress size={25} sx={{ color: colors.primary }} /> : title}
     </Button>
   );
 };

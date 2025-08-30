@@ -1,4 +1,4 @@
-import { Dashboard, Category, ListAlt, Workspaces, ViewCarousel, Groups, Language, Article, Info, AccountCircle, Sell } from "@mui/icons-material";
+import { Dashboard, Category, Workspaces, ViewCarousel, Groups, Article, Info, AccountCircle, Sell } from "@mui/icons-material";
 import colors from "./assets/styles/colors";
 
 const styles = {
@@ -13,47 +13,48 @@ const Navigation = [
   {
     label: "Dashboard",
     icon: <Dashboard sx={styles.iconSize} />,
-    path: "/",
+    routes: ["/"],
   },
   {
     label: "Manage Banners",
     icon: <ViewCarousel sx={styles.iconSize} />,
-    path: "/banners"
+    routes: ["/banners"]
   },
   {
     label: "Manage Categories",
     icon: <Category sx={styles.iconSize} />,
-    path: "/categories"
+    routes: ["/categories"]
   },
   {
     label: "Manage Products",
     icon: <Workspaces sx={styles.iconSize} />,
-    path: "/products",
+    routes: ["/products", "/products/create-product", "/products/update-product/:id"],
+    routesLabel: ["Manage Products", "Create Product", "Update Product"]
   },
   {
     label: "Orders",
     icon: <Sell sx={styles.iconSize} />,
-    path: "/orders",
+    routes: ["/orders"],
   },
   {
     label: "Users",
     icon: <Groups sx={styles.iconSize} />,
-    path: "/users",
+    routes: ["/users"],
   },
   {
     label: "Manage About",
     icon: <Info sx={styles.iconSize} />,
-    path: "/about",
+    routes: ["/about"],
   },
   {
     label: "Manage Blogs",
     icon: <Article sx={styles.iconSize} />,
-    path: "/blogs",
+    routes: ["/blogs"],
   },
   {
     label: "Logout",
     icon: <AccountCircle sx={styles.iconSize} />,
-    path: "/logout",
+    routes: ["/logout"],
   },
 ];
 
