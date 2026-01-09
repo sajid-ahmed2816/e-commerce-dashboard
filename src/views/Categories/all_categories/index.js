@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Grid, IconButton, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
-import { Delete, Edit, ErrorOutline, ImageRounded } from '@mui/icons-material';
+import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import TableRow from '../../../components/TableRow';
@@ -10,6 +10,9 @@ import InputField from '../../../components/InputField';
 import UploadService from '../../../api/upload/UploadService';
 import useToast from '../../../hooks/useToast';
 import CategoryServices from '../../../api/categories/CategoryServices';
+import useDebounce from '../../../utils/Debounce';
+import { useSearchParams } from "react-router-dom";
+import TablePagination from '../../../components/Pagination';
 import moment from 'moment';
 
 const tableHead = ["S.No", "Image", "Name", "Type", "Created At", "Actions"];
@@ -20,8 +23,17 @@ function Categories() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [image, setImage] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
   const { showToast } = useToast();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 10;
+  const searchQuery = searchParams.get("search") || "";
 
   const handleCategoryDialog = () => setIsCategoryDialogOpen((prevOpen) => !prevOpen);
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
@@ -87,15 +99,18 @@ function Categories() {
     }
   };
 
-  const getCategories = async () => {
+  const getCategories = async (value, pageNumber) => {
     try {
-      const result = await CategoryServices.getCategories();
+      const params = { search: value, page: pageNumber, limit: limit };
+      const result = await CategoryServices.getCategories(params);
       if (result.status) {
         setCategories(result.data.categories);
-      }
+        setTotalPages(result.data.pagination.totalPages);
+        setTotalCount(result.data.pagination.total);
+      };
     } catch (error) {
       showToast(error, "error")
-    }
+    };
   };
 
   const deleteCategory = async () => {
@@ -112,9 +127,12 @@ function Categories() {
     }
   };
 
+  const searchValue = watch("search");
+  const debouncedSearch = useDebounce(searchValue, 500);
+
   useEffect(() => {
-    getCategories();
-  }, []);
+    getCategories(debouncedSearch, page);
+  }, [debouncedSearch, page]);
 
   useEffect(() => {
     if (selectedCategory != null) {
@@ -124,6 +142,21 @@ function Categories() {
       setImage("");
     };
   }, [selectedCategory]);
+
+  const debouncedInput = useDebounce(searchValue, 500);
+
+  useEffect(() => {
+    setSearchParams((prev) => {
+      prev.set("page", 1);
+      prev.set("limit", limit);
+      prev.set("search", debouncedInput || "");
+      return prev;
+    });
+  }, [debouncedInput]);
+
+  useEffect(() => {
+    setValue("search", searchQuery);
+  }, []);
 
   return (
     <Fragment>
@@ -264,23 +297,48 @@ function Categories() {
       >
         <Grid container spacing={2}>
           <Grid item md={12}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end"
-              }}
-            >
-              <PrimaryButton
-                title={"Create Category"}
-                onClick={() => {
-                  setSelectedCategory(null);
-                  handleCategoryDialog();
-                }}
-              />
-            </Box>
+            <Grid container spacing={2}>
+              <Grid item md={6}>
+                <InputField
+                  placeholder={"Search here..."}
+                  size={"small"}
+                  fullWidth={true}
+                  value={watch("search")}
+                  register={register("search")}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <Search />
+                      </InputAdornment>
+                    )
+                  }}
+                />
+              </Grid>
+              <Grid item md={6}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end"
+                  }}
+                >
+                  <PrimaryButton
+                    title={"Create Category"}
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      handleCategoryDialog();
+                    }}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
           </Grid>
           <Grid item md={12}>
-            <TableContainer>
+            <TableContainer
+              sx={{
+                height: "calc(100vh - 226px)",
+                overflowY: "auto"
+              }}
+            >
               <Table>
                 <TableHead>
                   <TableRow>
@@ -328,6 +386,34 @@ function Categories() {
                 </TableBody>
               </Table>
             </TableContainer>
+          </Grid>
+          <Grid item md={12}>
+            <Grid container alignItems={"center"}>
+              <Grid item md={6}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}
+                >
+                  <Typography>Total Categories:</Typography>
+                  <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+                </Box>
+              </Grid>
+              <Grid item md={6}>
+                <TablePagination
+                  page={page}
+                  totalPages={totalPages}
+                  onChange={(e, value) => {
+                    setSearchParams((prev) => {
+                      prev.set("page", value);
+                      return prev;
+                    });
+                  }}
+                />
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
       </Box>

@@ -11,10 +11,16 @@ function InputField({
   helperText,
   value,
   multiline,
-  rows
+  rows,
+  size,
+  sx,
+  InputProps,
+  placeholder
 }) {
   return (
     <TextField
+      placeholder={placeholder}
+      size={size || "medium"}
       variant={variant}
       value={value}
       label={label}
@@ -29,6 +35,8 @@ function InputField({
       }}
       multiline={multiline}
       rows={rows}
+      sx={sx}
+      InputProps={InputProps}
     />
   )
 }

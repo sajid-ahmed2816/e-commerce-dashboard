@@ -9,6 +9,7 @@ import Users from "../views/Users";
 import About from "../views/About";
 import Blogs from "../views/Blogs";
 import UpdateProduct from "../views/Products/update_product";
+import Sizes from "../views/Sizes/all_sizes";
 
 const adminRoutes = [
   {
@@ -34,6 +35,10 @@ const adminRoutes = [
   {
     path: "/categories",
     component: <Categories />,
+  },
+  {
+    path: "/sizes",
+    component: <Sizes />,
   },
   {
     path: "/banners",

@@ -68,12 +68,17 @@ export default function SideNav() {
       anchor="left"
     >
       {/* <Toolbar /> */}
-      <List>
+      <List
+        sx={{
+          p: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 1
+        }}
+      >
         {Navigation.map((item, index) => item.subMenu ? (
           <Fragment key={index}>
-            <ListItem
-              onClick={() => handleToggleExpand(item)}
-            >
+            <ListItem disablePadding={true} onClick={() => handleToggleExpand(item)}>
               <ListItemButton>
                 <ListItemIcon
                   sx={{
@@ -125,7 +130,7 @@ export default function SideNav() {
             </Collapse>
           </Fragment>
         ) : (
-          <ListItem key={index}>
+          <ListItem disablePadding={true} key={index}>
             <ListItemButton
               onClick={() => handleItemClick(item.routes[0])}
               sx={{

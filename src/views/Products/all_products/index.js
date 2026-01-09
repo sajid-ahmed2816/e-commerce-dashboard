@@ -1,34 +1,49 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, CardMedia, Grid, IconButton, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
-import { Delete, Edit, ErrorOutline, ImageRounded } from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import TableRow from '../../../components/TableRow';
 import TableCell from '../../../components/TableCell';
 import Dialog from '../../../components/Dialog';
 import InputField from '../../../components/InputField';
 import useToast from '../../../hooks/useToast';
-import moment from 'moment';
 import ProductServices from '../../../api/products/ProductServices';
+import useDebounce from '../../../utils/Debounce';
+import TablePagination from '../../../components/Pagination';
+import { useForm } from 'react-hook-form';
+import moment from 'moment';
 
-const tableHead = ["S.No", "Name", "Category", "Price", "Created At", "Actions"];
+const tableHead = ["S.No", "Image", "Name", "Category", "Price", "Created At", "Actions"];
 
 function Products() {
   const [isLoading, setIsLoading] = useState("");
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedCategory] = useState(null);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const { register, setValue, watch } = useForm();
   const { showToast } = useToast();
+
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 10;
+  const searchQuery = searchParams.get("search") || "";
 
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
 
-  const getProducts = async () => {
+  const getProducts = async (value, pageNumber, category) => {
     try {
-      const result = await ProductServices.getProducts();
+      const params = { search: value, page: pageNumber, limit: limit, category: category };
+      const result = await ProductServices.getProducts(params);
       if (result.status) {
         setProducts(result.data.products);
+        setTotalPages(result.data.pagination.totalPages);
+        setTotalCount(result.data.pagination.total);
       }
     } catch (error) {
       showToast(error, "error")
@@ -51,8 +66,26 @@ function Products() {
     }
   };
 
+  const searchValue = watch("search");
+  const debouncedSearch = useDebounce(searchValue, 500);
+
   useEffect(() => {
-    getProducts();
+    getProducts(debouncedSearch, page);
+  }, [debouncedSearch, page]);
+
+  const debouncedInput = useDebounce(searchValue, 500);
+
+  useEffect(() => {
+    setSearchParams((prev) => {
+      prev.set("page", 1);
+      prev.set("limit", limit);
+      prev.set("search", debouncedInput || "");
+      return prev;
+    });
+  }, [debouncedInput]);
+
+  useEffect(() => {
+    setValue("search", searchQuery);
   }, []);
 
   return (
@@ -105,23 +138,48 @@ function Products() {
       >
         <Grid container spacing={2}>
           <Grid item md={12}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end"
-              }}
-            >
-              <PrimaryButton
-                title={"Create Product"}
-                onClick={() => {
-                  setSelectedCategory(null);
-                  navigate("/products/create-product")
-                }}
-              />
-            </Box>
+            <Grid container spacing={2}>
+              <Grid item md={6}>
+                <InputField
+                  placeholder={"Search here..."}
+                  size={"small"}
+                  fullWidth={true}
+                  value={watch("search")}
+                  register={register("search")}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <Search />
+                      </InputAdornment>
+                    )
+                  }}
+                />
+              </Grid>
+              <Grid item md={6}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end"
+                  }}
+                >
+                  <PrimaryButton
+                    title={"Create Product"}
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      navigate("/products/create-product")
+                    }}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
           </Grid>
           <Grid item md={12}>
-            <TableContainer>
+            <TableContainer
+              sx={{
+                height: "calc(100vh - 226px)",
+                overflowY: "auto"
+              }}
+            >
               <Table>
                 <TableHead>
                   <TableRow>
@@ -134,6 +192,7 @@ function Products() {
                   {products.map((item, ind) => (
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
+                      <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item?.category?.name}</TableCell>
                       <TableCell>{item.price}</TableCell>
@@ -169,6 +228,34 @@ function Products() {
                 </TableBody>
               </Table>
             </TableContainer>
+          </Grid>
+          <Grid item md={12}>
+            <Grid container alignItems={"center"}>
+              <Grid item md={6}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}
+                >
+                  <Typography>Total Products:</Typography>
+                  <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+                </Box>
+              </Grid>
+              <Grid item md={6}>
+                <TablePagination
+                  page={page}
+                  totalPages={totalPages}
+                  onChange={(e, value) => {
+                    setSearchParams((prev) => {
+                      prev.set("page", value);
+                      return prev;
+                    });
+                  }}
+                />
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
       </Box>

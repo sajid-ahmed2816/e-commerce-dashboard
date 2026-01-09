@@ -21,6 +21,11 @@ const Navigation = [
     routes: ["/banners"]
   },
   {
+    label: "Manage Sizes",
+    icon: <Category sx={styles.iconSize} />,
+    routes: ["/sizes"]
+  },
+  {
     label: "Manage Categories",
     icon: <Category sx={styles.iconSize} />,
     routes: ["/categories"]
