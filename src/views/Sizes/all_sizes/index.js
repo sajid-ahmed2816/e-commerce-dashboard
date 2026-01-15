@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Box, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
@@ -13,13 +13,16 @@ import useDebounce from '../../../utils/Debounce';
 import { useSearchParams } from "react-router-dom";
 import TablePagination from '../../../components/Pagination';
 import moment from 'moment';
+import { Switch } from '../../../components/Switch';
+import TableHead from '../../../components/TableHead';
 
-const tableHead = ["S.No", "Size", "Created At", "Actions"];
+const tableHead = ["S.No", "Size", "Status", "Created At", "Actions"];
 
 function Sizes() {
   const [isSizeDialogOpen, setIsSizeDialogOpen] = useState(false);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [sizes, setSizes] = useState([]);
+  const [activeIds, setActiveIds] = useState([]);
   const [selectedSize, setSelectedSize] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -86,6 +89,8 @@ function Sizes() {
         setSizes(result.data.sizes);
         setTotalPages(result.data.pagination.totalPages);
         setTotalCount(result.data.pagination.total);
+        const ids = result.data.sizes.filter(s => s.isActive).map(s => s._id);
+        setActiveIds(ids);
       };
     } catch (error) {
       showToast(error, "error")
@@ -104,6 +109,25 @@ function Sizes() {
     } finally {
       getSizes();
     }
+  };
+
+  const handleStatus = async (item) => {
+    const obj = {}
+    if (item.isActive) {
+      obj.isActive = false;
+    } else {
+      obj.isActive = true;
+    };
+    try {
+      const result = await SizeServices.updateStatus(item._id, obj);
+      if (result) {
+        showToast(result?.message, "success");
+      };
+    } catch (error) {
+      showToast(error, "error");
+    } finally {
+      getSizes();
+    };
   };
 
   const searchValue = watch("search");
@@ -279,6 +303,12 @@ function Sizes() {
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
                       <TableCell>{item.size}</TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={activeIds.includes(item._id)}
+                          onChange={() => handleStatus(item)}
+                        />
+                      </TableCell>
                       <TableCell>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
                       <TableCell>
                         <Box

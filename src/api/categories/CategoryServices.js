@@ -17,6 +17,11 @@ const CategoryServices = {
     return result;
   },
 
+  updateStatus: async (id, obj) => {
+    const result = await patch(Routes.updateStatus + `/${id}`, obj);
+    return result;
+  },
+
   deleteCategory: async (id) => {
     const result = await deleted(Routes.deleteCategory + `/${id}`);
     return result;

@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import TableRow from '../../../components/TableRow';
@@ -13,12 +13,15 @@ import useDebounce from '../../../utils/Debounce';
 import TablePagination from '../../../components/Pagination';
 import { useForm } from 'react-hook-form';
 import moment from 'moment';
+import TableHead from '../../../components/TableHead';
+import { Switch } from '../../../components/Switch';
 
-const tableHead = ["S.No", "Image", "Name", "Category", "Price", "Created At", "Actions"];
+const tableHead = ["S.No", "Image", "Name", "Category", "Price", "Status", "Created At", "Actions"];
 
 function Products() {
   const [isLoading, setIsLoading] = useState("");
   const [products, setProducts] = useState([]);
+  const [activeIds, setActiveIds] = useState([]);
   const [selectedProduct, setSelectedCategory] = useState(null);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
@@ -44,6 +47,8 @@ function Products() {
         setProducts(result.data.products);
         setTotalPages(result.data.pagination.totalPages);
         setTotalCount(result.data.pagination.total);
+        const ids = result.data.products.filter(p => p.isActive).map(p => p._id);
+        setActiveIds(ids);
       }
     } catch (error) {
       showToast(error, "error")
@@ -64,6 +69,25 @@ function Products() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleStatus = async (item) => {
+    const obj = {}
+    if (item.isActive) {
+      obj.isActive = false;
+    } else {
+      obj.isActive = true;
+    };
+    try {
+      const result = await ProductServices.updateStatus(item._id, obj);
+      if (result) {
+        showToast(result?.message, "success");
+      };
+    } catch (error) {
+      showToast(error, "error");
+    } finally {
+      getProducts();
+    };
   };
 
   const searchValue = watch("search");
@@ -196,6 +220,12 @@ function Products() {
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item?.category?.name}</TableCell>
                       <TableCell>{item.price}</TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={activeIds.includes(item._id)}
+                          onChange={() => handleStatus(item)}
+                        />
+                      </TableCell>
                       <TableCell>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
                       <TableCell>
                         <Box

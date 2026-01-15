@@ -27,14 +27,17 @@ function MultiSelectField({
             })}
           </div>
         )}
-        SelectProps={{
-        }}
         variant="outlined"
         label={label}
         fullWidth={fullWidth}
         disabled={disabled}
         InputLabelProps={{
           shrink: !!value?.length,
+        }}
+        sx={{
+          "& .MuiSelect-outlined": {
+            height: 23
+          }
         }}
       >
         {options.map((item) => (

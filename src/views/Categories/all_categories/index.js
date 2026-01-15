@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
@@ -14,13 +14,18 @@ import useDebounce from '../../../utils/Debounce';
 import { useSearchParams } from "react-router-dom";
 import TablePagination from '../../../components/Pagination';
 import moment from 'moment';
+import Loader from '../../../components/Loader';
+import { Switch } from '../../../components/Switch';
+import TableHead from '../../../components/TableHead';
 
-const tableHead = ["S.No", "Image", "Name", "Type", "Created At", "Actions"];
+const tableHead = ["S.No", "Image", "Name", "Type", "Status", "Created At", "Actions"];
 
 function Categories() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [activeIds, setActiveIds] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [image, setImage] = useState("");
   const [totalPages, setTotalPages] = useState(1);
@@ -49,6 +54,7 @@ function Categories() {
     const formData = new FormData();
     formData.append("file", file);
     try {
+      setIsLoading(true);
       const result = await UploadService.uploadImage(formData);
       if (result) {
         showToast(result.message, "success");
@@ -56,6 +62,8 @@ function Categories() {
       }
     } catch (error) {
       showToast(error, "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -107,6 +115,8 @@ function Categories() {
         setCategories(result.data.categories);
         setTotalPages(result.data.pagination.totalPages);
         setTotalCount(result.data.pagination.total);
+        const ids = result.data.categories.filter(c => c.isActive).map(c => c._id);
+        setActiveIds(ids);
       };
     } catch (error) {
       showToast(error, "error")
@@ -125,6 +135,25 @@ function Categories() {
     } finally {
       getCategories();
     }
+  };
+
+  const handleStatus = async (item) => {
+    const obj = {}
+    if (item.isActive) {
+      obj.isActive = false;
+    } else {
+      obj.isActive = true;
+    };
+    try {
+      const result = await CategoryServices.updateStatus(item._id, obj);
+      if (result) {
+        showToast(result?.message, "success");
+      };
+    } catch (error) {
+      showToast(error, "error");
+    } finally {
+      getCategories();
+    };
   };
 
   const searchValue = watch("search");
@@ -172,42 +201,89 @@ function Categories() {
             <Grid item md={4}>
               <Box
                 sx={{
+                  height: "-webkit-fill-available",
                   border: "1px solid #b5b5b5",
-                  borderRadius: "4px"
+                  borderRadius: "4px",
+                  position: "relative",
+                  overflow: "hidden",
+                  "&:hover .overlay": {
+                    opacity: 1,
+                  },
                 }}
               >
-                <input
-                  id="uploadImage"
-                  type="file"
-                  onChange={uploadImage}
-                  style={{
-                    display: "none"
-                  }}
-                />
-                <label
-                  htmlFor='uploadImage'
-                  style={{
-                    width: "100%",
-                    height: "126px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {image != "" ? (
-                    <CardMedia
-                      component={"img"}
-                      src={image}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover"
+                {isLoading ? (
+                  <Loader />
+                ) : (
+                  <Fragment>
+                    <input
+                      id="uploadImage"
+                      type="file"
+                      onChange={uploadImage}
+                      style={{
+                        display: "none"
                       }}
                     />
-                  ) : (
-                    <ImageRounded sx={{ fontSize: "48px" }} />
-                  )}
-                </label>
+                    <label
+                      htmlFor='uploadImage'
+                      style={{
+                        width: "100%",
+                        height: "126px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {image != "" ? (
+                        <Fragment>
+                          <CardMedia
+                            component={"img"}
+                            src={image}
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover"
+                            }}
+                          />
+                          <Box
+                            className="overlay"
+                            sx={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              backgroundColor: "rgba(0,0,0,0.4)",
+                              color: "white",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              opacity: 0,
+                              transition: "opacity 0.3s",
+                              fontSize: 16,
+                              fontWeight: 500,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <ImageRounded sx={{ fontSize: "36px" }} />
+                            <Typography sx={{ fontSize: 14 }}>Upload Image</Typography>
+                          </Box>
+                        </Fragment>
+                      ) : (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 1
+                          }}
+                        >
+                          <ImageRounded sx={{ fontSize: "36px" }} />
+                          <Typography sx={{ fontSize: 14 }}>Upload Image</Typography>
+                        </Box>
+                      )}
+                    </label>
+                  </Fragment>
+                )}
               </Box>
             </Grid>
             <Grid item md={8}>
@@ -354,6 +430,12 @@ function Categories() {
                       <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item.type}</TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={activeIds.includes(item._id)}
+                          onChange={() => handleStatus(item)}
+                        />
+                      </TableCell>
                       <TableCell>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
                       <TableCell>
                         <Box

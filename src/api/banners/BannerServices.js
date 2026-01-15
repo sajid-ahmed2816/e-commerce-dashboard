@@ -17,6 +17,11 @@ const BannerServices = {
     return result;
   },
 
+  updateStatus: async (id, obj) => {
+    const result = await patch(Routes.updateStatus + `/${id}`, obj);
+    return result;
+  },
+
   deleteBanner: async (id) => {
     const result = await deleted(Routes.deleteBanner + `/${id}`);
     return result;

@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Box, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import PrimaryButton, { SecondaryButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
@@ -13,6 +13,7 @@ import useDebounce from '../../utils/Debounce';
 import TablePagination from '../../components/Pagination';
 import { useForm } from 'react-hook-form';
 import moment from 'moment';
+import TableHead from '../../components/TableHead';
 
 const tableHead = ["S.No", "Name", "Email", "Created At", "Actions"];
 
@@ -264,7 +265,7 @@ function Users() {
                   {users.map((item, ind) => (
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
-                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{`${item.firstName} ${item.lastName}`}</TableCell>
                       <TableCell>{item.email}</TableCell>
                       <TableCell>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
                       <TableCell>

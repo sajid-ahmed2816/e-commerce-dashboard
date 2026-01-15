@@ -42,7 +42,7 @@ function CreateProduct() {
       showToast(error, "error");
     } finally {
       setIsImageLoading(false);
-    }
+    };
   };
 
   const createProduct = async (formData) => {
@@ -50,6 +50,7 @@ function CreateProduct() {
     const obj = {
       name: formData.name,
       category: formData.category,
+      size: formData.size,
       image: image,
       price: formData.price,
       description: formData.description
@@ -147,77 +148,81 @@ function CreateProduct() {
                 },
               }}
             >
-              <input
-                id="uploadImage"
-                type="file"
-                onChange={uploadImage}
-                style={{
-                  display: "none"
-                }}
-              />
-              <label
-                htmlFor='uploadImage'
-                style={{
-                  width: "100%",
-                  height: "-webkit-fill-available",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-              >
-                {image != "" ? (
-                  <Fragment>
-                    <CardMedia
-                      component={"img"}
-                      src={image}
-                      sx={{
-                        width: "100%",
-                        height: "calc(100vh - 219px)",
-                        borderRadius: "4px",
-                        objectFit: "cover"
-                      }}
-                    />
-                    <Box
-                      className="overlay"
-                      sx={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        backgroundColor: "rgba(0,0,0,0.4)",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: 0,
-                        transition: "opacity 0.3s",
-                        fontSize: 16,
-                        fontWeight: 500,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <ImageRounded sx={{ fontSize: "48px" }} />
-                      <Typography>Upload Image</Typography>
-                    </Box>
-                  </Fragment>
-                ) : isImageLoading ? (
-                  <Loader />
-                ) : (
-                  <Box
-                    sx={{
+              {isImageLoading ? (
+                <Loader />
+              ) : (
+                <Fragment>
+                  <input
+                    id="uploadImage"
+                    type="file"
+                    onChange={uploadImage}
+                    style={{
+                      display: "none"
+                    }}
+                  />
+                  <label
+                    htmlFor='uploadImage'
+                    style={{
+                      width: "100%",
+                      height: "-webkit-fill-available",
                       display: "flex",
-                      flexDirection: "column",
                       alignItems: "center",
-                      gap: 1
+                      justifyContent: "center",
+                      cursor: "pointer",
                     }}
                   >
-                    <ImageRounded sx={{ fontSize: "48px" }} />
-                    <Typography>Upload Image</Typography>
-                  </Box>
-                )}
-              </label>
+                    {image != "" ? (
+                      <Fragment>
+                        <CardMedia
+                          component={"img"}
+                          src={image}
+                          sx={{
+                            width: "100%",
+                            height: "calc(100vh - 219px)",
+                            borderRadius: "4px",
+                            objectFit: "cover"
+                          }}
+                        />
+                        <Box
+                          className="overlay"
+                          sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            backgroundColor: "rgba(0,0,0,0.4)",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: 0,
+                            transition: "opacity 0.3s",
+                            fontSize: 16,
+                            fontWeight: 500,
+                            cursor: "pointer",
+                          }}
+                        >
+                          <ImageRounded sx={{ fontSize: "48px" }} />
+                          <Typography>Upload Image</Typography>
+                        </Box>
+                      </Fragment>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 1
+                        }}
+                      >
+                        <ImageRounded sx={{ fontSize: "48px" }} />
+                        <Typography>Upload Image</Typography>
+                      </Box>
+                    )}
+                  </label>
+                </Fragment>
+              )}
             </Box>
           </Grid>
           <Grid item md={6}>
@@ -225,6 +230,22 @@ function CreateProduct() {
               container
               spacing={2}
             >
+              <Grid item md={12}>
+                <Box>
+                  <InputField
+                    variant={"outlined"}
+                    label={"Name"}
+                    fullWidth={true}
+                    type={"text"}
+                    value={watch("name")}
+                    register={register("name", {
+                      required: "Enter Category Name",
+                    })}
+                    error={errors?.name && true}
+                    helperText={errors?.name?.message}
+                  />
+                </Box>
+              </Grid>
               <Grid item md={12}>
                 <Box>
                   <SelectField
@@ -274,22 +295,6 @@ function CreateProduct() {
                     })}
                     error={errors?.price && true}
                     helperText={errors?.price?.message}
-                  />
-                </Box>
-              </Grid>
-              <Grid item md={12}>
-                <Box>
-                  <InputField
-                    variant={"outlined"}
-                    label={"Name"}
-                    fullWidth={true}
-                    type={"text"}
-                    value={watch("name")}
-                    register={register("name", {
-                      required: "Enter Category Name",
-                    })}
-                    error={errors?.name && true}
-                    helperText={errors?.name?.message}
                   />
                 </Box>
               </Grid>

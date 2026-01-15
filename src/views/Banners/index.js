@@ -7,16 +7,22 @@ import Dialog from '../../components/Dialog';
 import { useForm } from 'react-hook-form';
 import useToast from '../../hooks/useToast';
 import UploadService from '../../api/upload/UploadService';
-import { Category, Delete, ErrorOutline, ImageRounded, Label } from '@mui/icons-material';
+import { AccessTime, Category, Delete, ErrorOutline, ImageRounded, Label } from '@mui/icons-material';
 import InputField from '../../components/InputField';
 import CategoryServices from '../../api/categories/CategoryServices';
 import SelectField from '../../components/SelectField';
 import BannerServices from '../../api/banners/BannerServices';
+import Loader from '../../components/Loader';
+import moment from 'moment';
+import { Switch } from '../../components/Switch';
 
 function Banners() {
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [activeIds, setActiveIds] = useState([]);
   const [banners, setBanners] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBanner, setSelectedBanner] = useState(null);
@@ -35,6 +41,7 @@ function Banners() {
   };
 
   const uploadImage = async (e) => {
+    setIsImageLoading(true)
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
@@ -43,10 +50,12 @@ function Banners() {
       if (result) {
         showToast(result.message, "success");
         setImage(result.url);
-      }
+      };
     } catch (error) {
       showToast(error, "error");
-    }
+    } finally {
+      setIsImageLoading(false);
+    };
   };
 
   const getCategories = async () => {
@@ -66,6 +75,8 @@ function Banners() {
       const result = await BannerServices.getBanners();
       if (result.status) {
         setBanners(result.data.banners);
+        const ids = result.data.banners.filter(b => b.isActive).map(b => b._id);
+        setActiveIds(ids);
       }
     } catch (error) {
       showToast(error, "error");
@@ -79,6 +90,7 @@ function Banners() {
       image: image
     };
     try {
+      setIsLoading(true);
       const result = await BannerServices.createBanner(obj);
       if (result.status) {
         showToast(result.message, "success");
@@ -89,6 +101,7 @@ function Banners() {
     } catch (error) {
       showToast(error, "error")
     } finally {
+      setIsLoading(false);
       getBanners();
     }
   };
@@ -100,6 +113,7 @@ function Banners() {
       image: image
     };
     try {
+      setIsLoading(true);
       const result = await BannerServices.updateBanner(selectedBanner?._id, obj);
       if (result.status) {
         showToast(result.message, "success");
@@ -108,6 +122,7 @@ function Banners() {
     } catch (error) {
       showToast(error, "error")
     } finally {
+      setIsLoading(false);
       getBanners();
     }
   };
@@ -124,6 +139,25 @@ function Banners() {
     } finally {
       getBanners();
     }
+  };
+
+  const handleStatus = async (banner) => {
+    const obj = {}
+    if (banner.isActive) {
+      obj.isActive = false;
+    } else {
+      obj.isActive = true;
+    };
+    try {
+      const result = await BannerServices.updateStatus(banner._id, obj);
+      if (result) {
+        showToast(result?.message, "success");
+      };
+    } catch (error) {
+      showToast(error, "error");
+    } finally {
+      getBanners();
+    };
   };
 
   useEffect(() => {
@@ -155,42 +189,89 @@ function Banners() {
         <Grid item md={12}>
           <Box
             sx={{
+              height: "186px",
               border: "1px solid #b5b5b5",
-              borderRadius: "4px"
+              borderRadius: "4px",
+              position: "relative",
+              overflow: "hidden",
+              "&:hover .overlay": {
+                opacity: 1,
+              },
             }}
           >
-            <input
-              id="uploadImage"
-              type="file"
-              onChange={uploadImage}
-              style={{
-                display: "none"
-              }}
-            />
-            <label
-              htmlFor='uploadImage'
-              style={{
-                width: "100%",
-                height: "186px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {image != "" ? (
-                <CardMedia
-                  component={"img"}
-                  src={image}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover"
+            {isImageLoading ? (
+              <Loader />
+            ) : (
+              <Fragment>
+                <input
+                  id="uploadImage"
+                  type="file"
+                  onChange={uploadImage}
+                  style={{
+                    display: "none"
                   }}
                 />
-              ) : (
-                <ImageRounded sx={{ fontSize: "48px" }} />
-              )}
-            </label>
+                <label
+                  htmlFor='uploadImage'
+                  style={{
+                    width: "100%",
+                    height: "186px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {image != "" ? (
+                    <Fragment>
+                      <CardMedia
+                        component={"img"}
+                        src={image}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover"
+                        }}
+                      />
+                      <Box
+                        className="overlay"
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          backgroundColor: "rgba(0,0,0,0.4)",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0,
+                          transition: "opacity 0.3s",
+                          fontSize: 16,
+                          fontWeight: 500,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <ImageRounded sx={{ fontSize: "48px" }} />
+                        <Typography>Upload Image</Typography>
+                      </Box>
+                    </Fragment>
+                  ) : (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 1
+                      }}
+                    >
+                      <ImageRounded sx={{ fontSize: "48px" }} />
+                      <Typography>Upload Image</Typography>
+                    </Box>
+                  )}
+                </label>
+              </Fragment>
+            )}
           </Box>
         </Grid>
         <Grid item md={6}>
@@ -229,7 +310,12 @@ function Banners() {
           <SecondaryButton title={"Cancel"} fullWidth onClick={handleBannerDialog} />
         </Grid>
         <Grid item md={6}>
-          <PrimaryButton title={"Submit"} fullWidth type={"submit"} />
+          <PrimaryButton
+            title={"Submit"}
+            fullWidth
+            type={"submit"}
+            isLoading={isLoading}
+          />
         </Grid>
       </Dialog>
       <Dialog
@@ -286,102 +372,146 @@ function Banners() {
             </Box>
           </Grid>
           <Grid item md={12}>
-            <Grid container spacing={2}>
-              {banners.map((banner) => (
-                <Grid item md={6}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "stretch",
-                      boxShadow: "0px 0px 5px 2px #E6E6E6",
-                      borderRadius: 2
-                    }}
-                  >
-                    <CardMedia
-                      component={"img"}
-                      src={banner?.image}
-                      sx={{
-                        width: "100%",
-                        height: "150px",
-                        objectFit: "cover",
-                        borderRadius: "8px 8px 0 0"
-                      }}
-                    />
+            <Box
+              sx={{
+                height: "calc(100vh - 176px)",
+                overflowY: "auto",
+                p: 1
+              }}
+            >
+              <Grid container spacing={2}>
+                {banners.map((banner) => (
+                  <Grid item md={6}>
                     <Box
                       sx={{
-                        p: 2,
                         display: "flex",
                         flexDirection: "column",
-                        gap: 1
+                        alignItems: "stretch",
+                        boxShadow: "0px 0px 5px 2px #E6E6E6",
+                        borderRadius: 2
                       }}
                     >
-                      <Box
+                      <CardMedia
+                        component={"img"}
+                        src={banner?.image}
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
+                          width: "100%",
+                          height: "240px",
+                          objectFit: "cover",
+                          borderRadius: "8px 8px 0 0"
                         }}
+                      />
+                      <Grid
+                        container
+                        spacing={1}
+                        sx={{ p: 2 }}
                       >
-                        <Label sx={{ fontSize: 20 }} />
-                        <Typography variant={"body2"}>
-                          {banner?.tagline}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <Category sx={{ fontSize: 20 }} />
-                        <Typography variant={"body2"}>
-                          {banner?.category?.name}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          pt: 1,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1
-                        }}
-                      >
-                        <PrimaryButton
-                          title={"Edit"}
-                          fullWidth={true}
-                          onClick={() => {
-                            setSelectedBanner(banner);
-                            handleBannerDialog();
-                          }}
-                        />
-                        <IconButton
-                          sx={{
-                            background: colors.red.A700,
-                            width: 36.5,
-                            height: 36.5,
-                            border: "1px solid transparent",
-                            ":hover": {
-                              border: `1px solid ${colors.red.A700}`,
-                              svg: {
-                                color: colors.red.A700,
-                              }
-                            }
-                          }}
-                          onClick={() => {
-                            setSelectedBanner(banner);
-                            handleConfirmationDialog();
-                          }}
-                        >
-                          <Delete sx={{ color: colors.common.white }} />
-                        </IconButton>
-                      </Box>
+                        <Grid item md={6}>
+                          <Box
+                            sx={{
+                              height: "-webkit-fill-available",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between"
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Label sx={{ fontSize: 20 }} />
+                              <Typography variant={"body2"}>
+                                {banner?.tagline}
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Category sx={{ fontSize: 20 }} />
+                              <Typography variant={"body2"}>
+                                {banner?.category?.name}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                        <Grid item md={6}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Switch
+                              checked={activeIds.includes(banner._id)}
+                              onChange={() => handleStatus(banner)}
+                            />
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                              gap: 1,
+                            }}
+                          >
+                            <AccessTime sx={{ fontSize: 20 }} />
+                            <Typography variant={"caption"} sx={{ lineHeight: 1.5 }}>
+                              {moment(banner.createdAt).format("DD-MMM-YYYY")}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item md={12}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1
+                            }}
+                          >
+                            <PrimaryButton
+                              title={"Edit"}
+                              fullWidth={true}
+                              onClick={() => {
+                                setSelectedBanner(banner);
+                                handleBannerDialog();
+                              }}
+                            />
+                            <IconButton
+                              sx={{
+                                background: colors.red.A700,
+                                width: 36.5,
+                                height: 36.5,
+                                border: "1px solid transparent",
+                                ":hover": {
+                                  border: `1px solid ${colors.red.A700}`,
+                                  svg: {
+                                    color: colors.red.A700,
+                                  }
+                                }
+                              }}
+                              onClick={() => {
+                                setSelectedBanner(banner);
+                                handleConfirmationDialog();
+                              }}
+                            >
+                              <Delete sx={{ color: colors.common.white }} />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                      </Grid>
                     </Box>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
           </Grid>
         </Grid>
       </Box>
