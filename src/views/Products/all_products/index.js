@@ -22,7 +22,7 @@ function Products() {
   const [isLoading, setIsLoading] = useState("");
   const [products, setProducts] = useState([]);
   const [activeIds, setActiveIds] = useState([]);
-  const [selectedProduct, setSelectedCategory] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -189,7 +189,7 @@ function Products() {
                   <PrimaryButton
                     title={"Create Product"}
                     onClick={() => {
-                      setSelectedCategory(null);
+                      setSelectedProduct(null);
                       navigate("/products/create-product")
                     }}
                   />
@@ -237,7 +237,7 @@ function Products() {
                         >
                           <IconButton
                             onClick={() => {
-                              setSelectedCategory(item);
+                              setSelectedProduct(item);
                               navigate(`/products/update-product/${item._id}`, { state: item })
                             }}
                           >
@@ -245,7 +245,7 @@ function Products() {
                           </IconButton>
                           <IconButton
                             onClick={() => {
-                              setSelectedCategory(item);
+                              setSelectedProduct(item);
                               handleConfirmationDialog();
                             }}
                           >

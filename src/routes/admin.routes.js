@@ -2,14 +2,13 @@ import Dashboard from "../views/Dashboard";
 import Orders from "../views/Orders";
 import Products from "../views/Products/all_products";
 import CreateProduct from "../views/Products/create_product";
-import Categories from "../views/Categories/all_categories";
-import CreateCategory from "../views/Categories/create_category";
+import Categories from "../views/Categories";
 import Banners from "../views/Banners";
 import Users from "../views/Users";
 import About from "../views/About";
 import Blogs from "../views/Blogs";
 import UpdateProduct from "../views/Products/update_product";
-import Sizes from "../views/Sizes/all_sizes";
+import Sizes from "../views/Sizes";
 
 const adminRoutes = [
   {
