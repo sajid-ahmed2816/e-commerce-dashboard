@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import moment from 'moment';
 import TableHead from '../../components/TableHead';
 
-const tableHead = ["S.No", "Customer Name", "Mobile No", "No of Products", "Total", "City", "Created At", "Actions"];
+const tableHead = ["S.No", "Order#", "Customer Name", "Mobile No", "No of Products", "Total", "City", "Created At", "Actions"];
 
 function Orders() {
   const [isLoading, setIsLoading] = useState("");
@@ -177,6 +177,7 @@ function Orders() {
                   {orders.map((item, ind) => (
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
+                      <TableCell>{item.orderNo}</TableCell>
                       <TableCell>{`${item.firstName} ${item.lastName}`}</TableCell>
                       <TableCell>{item.mobile}</TableCell>
                       <TableCell>{item?.items.length}</TableCell>
