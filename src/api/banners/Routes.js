@@ -1,6 +1,6 @@
 const Routes = {
   createBanner: "/banners/create",
-  getBanners: "/banners/",
+  getBanners: "/banners",
   updateBanner: "/banners/update",
   updateStatus: "/banners/updateStatus",
   deleteBanner: "/banners/delete"

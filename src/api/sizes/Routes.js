@@ -1,6 +1,6 @@
 const Routes = {
   createSize: "/sizes/create",
-  getSizes: "/sizes/",
+  getSizes: "/sizes",
   updateSize: "/sizes/update",
   updateStatus: "/sizes/updateStatus",
   deleteSize: "/sizes/delete"

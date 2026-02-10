@@ -1,5 +1,5 @@
 const Routes = {
-  getProducts: "/products/",
+  getProducts: "/products",
   createProduct: "/products/create",
   updateProduct: "/products/update",
   updateStatus: "/products/updateStatus",

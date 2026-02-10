@@ -26,6 +26,11 @@ const Navigation = [
     routes: ["/sizes"]
   },
   {
+    label: "Manage Offers",
+    icon: <Category sx={styles.iconSize} />,
+    routes: ["/offers"]
+  },
+  {
     label: "Manage Categories",
     icon: <Category sx={styles.iconSize} />,
     routes: ["/categories"]

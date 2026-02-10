@@ -87,7 +87,14 @@ export default function SideNav() {
                 >
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={item.label} sx={{ "& .MuiTypography-root": { fontFamily: "Comfortaa" } }} />
+                <ListItemText
+                  primary={item.label}
+                  sx={{
+                    "& .MuiTypography-root": {
+                      fontFamily: "Comfortaa",
+                    },
+                  }}
+                />
                 {expand[item.label] ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
@@ -161,7 +168,17 @@ export default function SideNav() {
               }}
             >
               <ListItemIcon sx={{ minWidth: "25px" }}>{item.icon}</ListItemIcon>
-              <ListItemText>{item.label}</ListItemText>
+              <ListItemText
+                  primary={item.label}
+                  sx={{
+                    "&.MuiListItemText-root":{
+                      my:"2px"
+                    },
+                    "& .MuiTypography-root": {
+                      fontFamily: "Comfortaa",
+                    },
+                  }}
+                />
             </ListItemButton>
           </ListItem>
         ))}

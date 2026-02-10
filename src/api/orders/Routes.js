@@ -1,5 +1,5 @@
 const Routes = {
-  getOrders: "/orders/",
+  getOrders: "/orders",
   deleteOrder: "/orders/delete",
 };
 
