@@ -1,21 +1,20 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Grid, IconButton, Paper, Table, TableBody, TableContainer, TableHead, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Grid, InputAdornment, Paper, Typography, colors } from '@mui/material';
 import PrimaryButton, { SecondaryButton } from '../../components/Button';
-import TableRow from '../../components/TableRow';
-import TableCell from '../../components/TableCell';
 import Dialog from '../../components/Dialog';
 import { useForm } from 'react-hook-form';
 import useToast from '../../hooks/useToast';
 import UploadService from '../../api/upload/UploadService';
-import { AccessTime, Category, Delete, ErrorOutline, ImageRounded, Label } from '@mui/icons-material';
+import { ErrorOutline, ImageRounded, Search, } from '@mui/icons-material';
 import InputField from '../../components/InputField';
 import CategoryServices from '../../api/categories/CategoryServices';
 import SelectField from '../../components/SelectField';
 import BannerServices from '../../api/banners/BannerServices';
 import Loader from '../../components/Loader';
-import moment from 'moment';
-import { Switch } from '../../components/Switch';
 import Card from '../../components/Card';
+import TablePagination from '../../components/Pagination';
+import { useSearchParams } from 'react-router-dom';
+import useDebounce from '../../utils/Debounce';
 
 function Banners() {
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
@@ -28,8 +27,17 @@ function Banners() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [image, setImage] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
   const { showToast } = useToast();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 10;
+  const searchQuery = searchParams.get("search") || "";
 
   const handleBannerDialog = () => setIsBannerDialogOpen((prevOpen) => !prevOpen);
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
@@ -71,11 +79,14 @@ function Banners() {
     }
   };
 
-  const getBanners = async () => {
+  const getBanners = async (value, pageNumber) => {
     try {
-      const result = await BannerServices.getBanners();
+      const params = { search: value, page: pageNumber, limit: limit };
+      const result = await BannerServices.getBanners(params);
       if (result.status) {
         setBanners(result.data.banners);
+        setTotalPages(result.data.pagination.totalPages);
+        setTotalCount(result.data.pagination.total);
         const ids = result.data.banners.filter(b => b.isActive).map(b => b._id);
         setActiveIds(ids);
       }
@@ -161,6 +172,9 @@ function Banners() {
     };
   };
 
+  const searchValue = watch("search");
+  const debouncedSearch = useDebounce(searchValue, 500);
+
   useEffect(() => {
     getBanners();
     getCategories();
@@ -175,6 +189,25 @@ function Banners() {
       setImage("");
     };
   }, [selectedBanner]);
+
+  useEffect(() => {
+    getBanners(debouncedSearch, page);
+  }, [debouncedSearch, page]);
+
+  const debouncedInput = useDebounce(searchValue, 500);
+
+  useEffect(() => {
+    setSearchParams((prev) => {
+      prev.set("page", 1);
+      prev.set("limit", limit);
+      prev.set("search", debouncedInput || "");
+      return prev;
+    });
+  }, [debouncedInput]);
+
+  useEffect(() => {
+    setValue("search", searchQuery);
+  }, []);
 
   return (
     <Fragment>
@@ -356,7 +389,23 @@ function Banners() {
         }}
       >
         <Grid container spacing={2}>
-          <Grid item md={12}>
+          <Grid item md={6}>
+            <InputField
+              placeholder={"Search here..."}
+              size={"small"}
+              fullWidth={true}
+              value={watch("search")}
+              register={register("search")}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <Search />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Grid>
+          <Grid item md={6}>
             <Box
               sx={{
                 display: "flex",
@@ -373,33 +422,64 @@ function Banners() {
             </Box>
           </Grid>
           <Grid item md={12}>
-            <Box
-              sx={{
-                height: "calc(100vh - 176px)",
-                overflowY: "auto",
-                p: 1
-              }}
-            >
-              <Grid container spacing={2}>
-                {banners.map((banner) => (
+            <Grid container spacing={2}>
+              <Grid item md={12}>
+                <Box
+                  sx={{
+                    height: "calc(100vh - 226px)",
+                    overflowY: "auto"
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    {banners.map((banner) => (
+                      <Grid item md={6}>
+                        <Card
+                          data={banner}
+                          primaryOnClick={(banner) => {
+                            setSelectedBanner(banner);
+                            handleBannerDialog();
+                          }}
+                          secondaryOnClickOnClick={(banner) => {
+                            setSelectedBanner(banner);
+                            handleConfirmationDialog();
+                          }}
+                          onChange={(banner) => handleStatus(banner)}
+                          activeIds={activeIds}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </Grid>
+              <Grid item md={12}>
+                <Grid container alignItems={"center"}>
                   <Grid item md={6}>
-                    <Card
-                    data={banner}
-                    primaryOnClick={(banner) => {
-                      setSelectedBanner(banner);
-                      handleBannerDialog();
-                    }}
-                    secondaryOnClickOnClick={(banner) => {
-                      setSelectedBanner(banner);
-                      handleConfirmationDialog();
-                    }}
-                    onChange={(banner) => handleStatus(banner)}
-                    activeIds={activeIds}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1
+                      }}
+                    >
+                      <Typography>Total Banners:</Typography>
+                      <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item md={6}>
+                    <TablePagination
+                      page={page}
+                      totalPages={totalPages}
+                      onChange={(e, value) => {
+                        setSearchParams((prev) => {
+                          prev.set("page", value);
+                          return prev;
+                        });
+                      }}
                     />
                   </Grid>
-                ))}
+                </Grid>
               </Grid>
-            </Box>
+            </Grid>
           </Grid>
         </Grid>
       </Box>
