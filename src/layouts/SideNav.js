@@ -141,16 +141,16 @@ export default function SideNav() {
             <ListItemButton
               onClick={() => handleItemClick(item.routes[0])}
               sx={{
-                background: pathname == item.routes[index] ? colors.white : colors.primary,
-                color: pathname == item.routes[index] ? colors.primary : colors.white,
+                background: item.routes.includes(pathname) ? colors.white : colors.primary,
+                color: item.routes.includes(pathname) ? colors.primary : colors.white,
                 borderRadius: "4px",
                 gap: 1,
                 "svg": {
                   "path": {
-                    fill: pathname == item.routes[index] ? colors.primary : colors.white,
+                    fill: item.routes.includes(pathname) ? colors.primary : colors.white,
                   },
                   "circle": {
-                    fill: pathname == item.routes[index] ? colors.primary : colors.white,
+                    fill: item.routes.includes(pathname) ? colors.primary : colors.white,
                   }
                 },
                 ":hover": {
@@ -171,9 +171,6 @@ export default function SideNav() {
               <ListItemText
                   primary={item.label}
                   sx={{
-                    "&.MuiListItemText-root":{
-                      my:"2px"
-                    },
                     "& .MuiTypography-root": {
                       fontFamily: "Comfortaa",
                     },

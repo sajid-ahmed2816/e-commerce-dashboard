@@ -6,10 +6,12 @@ import Categories from "../views/Categories";
 import Banners from "../views/Banners";
 import Users from "../views/Users";
 import About from "../views/About";
-import Blogs from "../views/Blogs";
+import Blogs from "../views/Blogs/all_blogs";
 import UpdateProduct from "../views/Products/update_product";
 import Sizes from "../views/Sizes";
 import Offers from "../views/Offers";
+import CreateBlog from "../views/Blogs/create_blog";
+import UpdateBlog from "../views/Blogs/update_blog";
 
 const adminRoutes = [
   {
@@ -59,6 +61,14 @@ const adminRoutes = [
   {
     path: "/blogs",
     component: <Blogs />,
+  },
+  {
+    path: "/blogs/create-blog",
+    component: <CreateBlog />,
+  },
+  {
+    path: "/blogs/update-blog/:id",
+    component: <UpdateBlog />,
   },
 ];
 

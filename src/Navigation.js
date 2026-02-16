@@ -1,4 +1,4 @@
-import { Dashboard, Category, Workspaces, ViewCarousel, Groups, Article, Info, AccountCircle, Sell } from "@mui/icons-material";
+import { Dashboard, Category, Workspaces, ViewCarousel, Groups, Article, Info, AccountCircle, Sell, LocalActivity, CandlestickChart } from "@mui/icons-material";
 import colors from "./assets/styles/colors";
 
 const styles = {
@@ -22,12 +22,12 @@ const Navigation = [
   },
   {
     label: "Manage Sizes",
-    icon: <Category sx={styles.iconSize} />,
+    icon: <CandlestickChart sx={styles.iconSize} />,
     routes: ["/sizes"]
   },
   {
     label: "Manage Offers",
-    icon: <Category sx={styles.iconSize} />,
+    icon: <LocalActivity sx={styles.iconSize} />,
     routes: ["/offers"]
   },
   {
@@ -52,14 +52,10 @@ const Navigation = [
     routes: ["/users"],
   },
   {
-    label: "Manage About",
-    icon: <Info sx={styles.iconSize} />,
-    routes: ["/about"],
-  },
-  {
     label: "Manage Blogs",
     icon: <Article sx={styles.iconSize} />,
-    routes: ["/blogs"],
+    routes: ["/blogs", "/blogs/create-blog", "/blogs/update-blog/:id"],
+    routesLabel: ["Manage Blogs", "Create Blog", "Update Blog"]
   },
   {
     label: "Logout",
