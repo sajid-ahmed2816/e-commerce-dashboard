@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Chip, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import PrimaryButton, { SecondaryButton } from '../../components/Button';
@@ -18,7 +18,7 @@ import Loader from '../../components/Loader';
 import { Switch } from '../../components/Switch';
 import TableHead from '../../components/TableHead';
 
-const tableHead = ["S.No", "Image", "Name", "Type", "Status", "Created At", "Actions"];
+const tableHead = ["S.No", "Image", "Name", "Type", "Popular", "Status", "Created At", "Actions"];
 
 function Categories() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -33,7 +33,7 @@ function Categories() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, setValue, getValues, watch } = useForm();
   const { showToast } = useToast();
 
   const page = Number(searchParams.get("page")) || 1;
@@ -47,6 +47,7 @@ function Categories() {
     setValue("categoryName", selectedCategory?.name);
     setValue("type", selectedCategory?.type);
     setImage(selectedCategory?.image);
+    setValue("isPopular", selectedCategory?.isPopular);
   };
 
   const uploadImage = async (e) => {
@@ -68,10 +69,12 @@ function Categories() {
   };
 
   const createCategory = async (formData) => {
+    const isPopular = getValues("isPopular");
     const obj = {
       name: formData.categoryName,
       type: formData.type,
-      image: image
+      image: image,
+      isPopular: isPopular
     };
     try {
       const result = await CategoryServices.createCategory(obj);
@@ -79,6 +82,7 @@ function Categories() {
         showToast(result.message, "success");
         reset();
         setImage("");
+        setValue("isPopular", false);
         handleCategoryDialog();
       }
     } catch (error) {
@@ -89,10 +93,12 @@ function Categories() {
   };
 
   const updateCategory = async (formData) => {
+    const isPopular = getValues("isPopular");
     const obj = {
       name: formData.categoryName,
       type: formData.type,
-      image: image
+      image: image,
+      isPopular: isPopular
     };
     try {
       const result = await CategoryServices.updateCategory(selectedCategory?._id, obj);
@@ -227,7 +233,7 @@ function Categories() {
                       htmlFor='uploadImage'
                       style={{
                         width: "100%",
-                        height: "126px",
+                        height: "168px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -317,6 +323,28 @@ function Categories() {
                       })}
                       error={errors?.type && true}
                       helperText={errors?.type?.message}
+                    />
+                  </Box>
+                </Grid>
+                <Grid item md={12}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <Typography
+                      component={"label"}
+                      variant={"caption"}
+                      htmlFor={"isPopular"}
+                    >
+                      Mark this as popular?
+                    </Typography>
+                    <Switch
+                      id={"isPopular"}
+                      checked={watch("isPopular")}
+                      onChange={(e) => setValue("isPopular", e.target.checked)}
                     />
                   </Box>
                 </Grid>
@@ -430,6 +458,7 @@ function Categories() {
                       <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item.type}</TableCell>
+                      <TableCell><Chip label={item?.isPopular ? "Yes" : "No"} variant={"outlined"} color={item?.isPopular ? "success" : "error"} size={"small"} /></TableCell>
                       <TableCell>
                         <Switch
                           checked={activeIds.includes(item._id)}
