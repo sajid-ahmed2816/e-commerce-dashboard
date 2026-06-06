@@ -57,11 +57,6 @@ const Navigation = [
     routes: ["/blogs", "/blogs/create-blog", "/blogs/update-blog/:id"],
     routesLabel: ["Manage Blogs", "Create Blog", "Update Blog"]
   },
-  {
-    label: "Logout",
-    icon: <AccountCircle sx={styles.iconSize} />,
-    routes: ["/logout"],
-  },
 ];
 
 export default Navigation;

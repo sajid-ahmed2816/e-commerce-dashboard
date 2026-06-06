@@ -35,13 +35,10 @@ function Dashboard() {
 
   return (
     <Box
-      component={Paper}
-      elevation={4}
       sx={{
         height: "calc(100vh - 90px)",
         width: "100%",
         overflowY: "auto",
-        borderRadius: "6px",
         p: 2,
       }}
     >

@@ -379,12 +379,9 @@ function Banners() {
         </Grid>
       </Dialog>
       <Box
-        component={Paper}
-        elevation={4}
         sx={{
           height: "100%",
           width: "100%",
-          borderRadius: "6px",
           p: 2
         }}
       >
@@ -426,7 +423,7 @@ function Banners() {
               <Grid item md={12}>
                 <Box
                   sx={{
-                    height: "calc(100vh - 226px)",
+                    height: "calc(100vh - 200px)",
                     overflowY: "auto"
                   }}
                 >

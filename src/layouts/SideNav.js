@@ -8,7 +8,8 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Collapse
+  Collapse,
+  Typography
 } from "@mui/material";
 import { ExpandLess, ExpandMore, Adjust } from "@mui/icons-material";
 import Navigation from "../Navigation";
@@ -18,7 +19,7 @@ import "@fontsource/comfortaa";
 import useAuth from "../hooks/useAuth";
 import useToast from "../hooks/useToast";
 
-const drawerWidth = 290;
+const drawerWidth = 250;
 
 export default function SideNav() {
   const [expand, setExpand] = useState({});
@@ -47,33 +48,39 @@ export default function SideNav() {
 
   return (
     <Drawer
-      PaperProps={{
-        elevation: 4
-      }}
       sx={{
+        zIndex: 1300,
         width: drawerWidth,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: 278,
+          width: 250,
           boxSizing: "border-box",
           background: colors.primary,
-          top: 76,
-          height: "calc(100vh - 86px)",
           border: "none",
-          borderRadius: "6px",
-          ml: "12px"
         },
       }}
       variant="permanent"
       anchor="left"
     >
-      {/* <Toolbar /> */}
+      <Toolbar>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}
+        >
+          <Typography variant="h6" sx={{ flex: 1, color: colors.white }}>
+            Fashion Store
+          </Typography>
+        </Box>
+      </Toolbar>
       <List
         sx={{
-          p: 1,
           display: "flex",
           flexDirection: "column",
-          gap: 1
+          gap: 1,
+          p: 0
         }}
       >
         {Navigation.map((item, index) => item.subMenu ? (
@@ -141,41 +148,37 @@ export default function SideNav() {
             <ListItemButton
               onClick={() => handleItemClick(item.routes[0])}
               sx={{
-                background: item.routes.includes(pathname) ? colors.white : colors.primary,
-                color: item.routes.includes(pathname) ? colors.primary : colors.white,
-                borderRadius: "4px",
+                background: colors.primary,
+                color: colors.white,
                 gap: 1,
                 "svg": {
                   "path": {
-                    fill: item.routes.includes(pathname) ? colors.primary : colors.white,
+                    fill: colors.white,
                   },
                   "circle": {
-                    fill: item.routes.includes(pathname) ? colors.primary : colors.white,
+                    fill: colors.white,
                   }
                 },
-                ":hover": {
-                  background: colors.white,
-                  color: colors.primary,
-                  "svg": {
-                    "path": {
-                      fill: colors.primary
-                    },
-                    "circle": {
-                      fill: colors.primary
-                    }
-                  }
+                "::before": {
+                  content: "''",
+                  width: item.routes.includes(pathname) ? "15px" : "0px",
+                  height: "3px",
+                  background: "white",
+                  transition: "all .3s ease-in-out",
+                  borderRadius: "4px"
                 }
               }}
             >
               <ListItemIcon sx={{ minWidth: "25px" }}>{item.icon}</ListItemIcon>
               <ListItemText
-                  primary={item.label}
-                  sx={{
-                    "& .MuiTypography-root": {
-                      fontFamily: "Comfortaa",
-                    },
-                  }}
-                />
+                primary={item.label}
+                sx={{
+                  "& .MuiTypography-root": {
+                    fontFamily: "Comfortaa",
+                    fontSize: "14px"
+                  },
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}

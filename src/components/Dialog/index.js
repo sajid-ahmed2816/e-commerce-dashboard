@@ -20,14 +20,27 @@ function Dialog({ maxWidth, fullWidth, open, handleClose, title, component, onSu
       slots={{
         transition: Transition,
       }}
+      slotProps={{
+        backdrop: {
+          sx: {
+            backdropFilter: "blur(2px)"
+          }
+        },
+      }}
+      sx={{
+        "& .MuiPaper-root": {
+          background: colors.secondary
+        }
+      }}
     >
-      <DialogTitle sx={{ p: 2, background: colors.primary, color: colors.white }}>{title}</DialogTitle>
+      <DialogTitle sx={{ fontSize: "16px", p: 2, background: colors.primary, color: colors.white }}>{title}</DialogTitle>
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
           gap: 2,
           p: 2,
+          background: colors.white
         }}
       >
         <Grid

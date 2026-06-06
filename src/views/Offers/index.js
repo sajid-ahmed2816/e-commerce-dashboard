@@ -231,7 +231,7 @@ function Offers() {
 							border: "none",
 							border: "1px solid rgba(0, 0, 0, 0.23)",
 							borderRadius: "4px",
-							position:"relative"
+							position: "relative"
 						}}
 					>
 						<Box component={"legend"}
@@ -407,7 +407,7 @@ function Offers() {
 					<Grid item md={12}>
 						<TableContainer
 							sx={{
-								height: "calc(100vh - 226px)",
+								height: "calc(100vh - 200px)",
 								overflowY: "auto"
 							}}
 						>
