@@ -148,24 +148,31 @@ export default function SideNav() {
             <ListItemButton
               onClick={() => handleItemClick(item.routes[0])}
               sx={{
-                background: colors.primary,
-                color: colors.white,
+                background: item.routes.includes(pathname) ? colors.white : colors.primary,
+                color: item.routes.includes(pathname) ? colors.primary : colors.white,
                 gap: 1,
                 "svg": {
                   "path": {
-                    fill: colors.white,
+                    fill: item.routes.includes(pathname) ? colors.primary : colors.white,
                   },
                   "circle": {
-                    fill: colors.white,
+                    fill: item.routes.includes(pathname) ? colors.primary : colors.white,
                   }
                 },
                 "::before": {
                   content: "''",
                   width: item.routes.includes(pathname) ? "15px" : "0px",
                   height: "3px",
-                  background: "white",
+                  background: colors.primary,
                   transition: "all .3s ease-in-out",
                   borderRadius: "4px"
+                },
+                borderTop: item.routes.includes(pathname) ? `1px solid ${colors.white}` : `1px solid ${colors.primary}`,
+                borderBottom: item.routes.includes(pathname) ? `1px solid ${colors.white}` : `1px solid ${colors.primary}`,
+                ":hover": {
+                  background: item.routes.includes(pathname) ? colors.white : "transparent",
+                  borderTop: `1px solid ${colors.white}`,
+                  borderBottom: `1px solid ${colors.white}`,
                 }
               }}
             >

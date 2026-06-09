@@ -16,7 +16,7 @@ import useToast from "../hooks/useToast";
 import BreadCrumb from "../components/BreadCrumb";
 import Navigation from "../Navigation";
 import { Images } from "../assets/images/Images"
-import { Notifications, Person } from "@mui/icons-material";
+import { LockReset, Logout, Notifications, Person } from "@mui/icons-material";
 import colors from "../assets/styles/colors";
 
 export default function Header() {
@@ -93,7 +93,7 @@ export default function Header() {
             sx: {
               overflow: 'visible',
               filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-              mt: 1.5,
+              mt: 0.75,
               '& .MuiAvatar-root': {
                 width: 32,
                 height: 32,
@@ -107,12 +107,33 @@ export default function Header() {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         <MenuItem onClick={handleClose}>
-          <Avatar /> Profile
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}
+          >
+            <LockReset />
+            <Typography>
+              Change Password
+            </Typography>
+          </Box>
         </MenuItem>
         <MenuItem onClick={handleClose}>
-          <Avatar /> My account
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}
+          >
+            <Logout />
+            <Typography>
+              Logout
+            </Typography>
+          </Box>
         </MenuItem>
-        <Divider />
       </Menu>
       <AppBar
         position="fixed"

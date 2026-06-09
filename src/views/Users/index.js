@@ -250,7 +250,7 @@ function Users() {
                 overflowY: "auto"
               }}
             >
-              <Table>
+              <Table size='small' sx={{ fontSize: "14px" }}>
                 <TableHead>
                   <TableRow>
                     {tableHead.map((ind) => (

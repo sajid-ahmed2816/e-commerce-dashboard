@@ -201,7 +201,7 @@ function Products() {
                 overflowY: "auto"
               }}
             >
-              <Table>
+              <Table size='small'>
                 <TableHead>
                   <TableRow>
                     {tableHead.map((ind) => (
