@@ -7,6 +7,11 @@ const ProductServices = {
     return result;
   },
 
+  bulkUpload: async (obj) => {
+    const result = await post(Routes.bulkUpload, obj);
+    return result;
+  },
+
   getProducts: async (params) => {
     const result = await get(Routes.getProducts, params);
     return result;

@@ -1,24 +1,88 @@
-import { Pagination } from "@mui/material";
+// import { Pagination } from "@mui/material";
 
-function TablePagination({ totalPages, page, onChange }) {
+// function TablePagination({ totalPages, page, onChange }) {
+//   return (
+//     <Pagination
+//       color={"primary"}
+//       size={"medium"}
+//       shape={"rounded"}
+//       variant={"outlined"}
+//       siblingCount={2}
+//       boundaryCount={2}
+//       count={totalPages}
+//       page={page}
+//       onChange={onChange}
+//       sx={{
+//         "& .MuiPagination-ul": {
+//           justifyContent: "flex-end"
+//         }
+//       }}
+//     />
+//   );
+// };
+
+// export default TablePagination;
+
+import { Pagination, Select, MenuItem, Box, Typography, InputLabel, FormControl } from "@mui/material";
+
+function TablePagination({
+  totalPages,
+  page,
+  onChange,
+  rowsPerPage,
+  onRowsPerPageChange,
+}) {
   return (
-    <Pagination
-      color={"primary"}
-      size={"medium"}
-      shape={"rounded"}
-      variant={"outlined"}
-      siblingCount={2}
-      boundaryCount={2}
-      count={totalPages}
-      page={page}
-      onChange={onChange}
+    <Box
       sx={{
-        "& .MuiPagination-ul": {
-          justifyContent: "flex-end"
-        }
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        gap: 2,
       }}
-    />
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2
+        }}
+      >
+        <Typography>Rows per page</Typography>
+        <FormControl>
+          <Select
+            labelId="rowsPerPage"
+            size="small"
+            value={rowsPerPage}
+            onChange={onRowsPerPageChange}
+            sx={{ minWidth: 70 }}
+          >
+            {[10, 25, 50, 100].map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <Pagination
+        color={"primary"}
+        size={"medium"}
+        shape={"rounded"}
+        variant={"outlined"}
+        siblingCount={2}
+        boundaryCount={2}
+        count={totalPages}
+        page={page}
+        onChange={onChange}
+        sx={{
+          "& .MuiPagination-ul": {
+            justifyContent: "flex-end"
+          }
+        }}
+      />
+    </Box>
   );
-};
+}
 
 export default TablePagination;

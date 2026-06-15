@@ -133,7 +133,7 @@ function UpdateProduct() {
     >
       <Box
         sx={{
-          height: "calc(100vh - 116px)",
+          height: "calc(100vh - 96px)",
           overflowY: "auto"
         }}
       >
@@ -282,7 +282,6 @@ function UpdateProduct() {
                   <Controller
                     name={"size"}
                     control={control}
-                    rules={{ required: "Select a size" }}
                     render={({ field }) => (
                       <MultiSelectField
                         label={"Size"}

@@ -267,7 +267,6 @@ function CreateProduct() {
                   <Controller
                     name={"size"}
                     control={control}
-                    rules={{ required: "Select a size" }}
                     render={({ field }) => (
                       <MultiSelectField
                         label={"Size"}

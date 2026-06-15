@@ -436,7 +436,7 @@ function Banners() {
                             setSelectedBanner(banner);
                             handleBannerDialog();
                           }}
-                          secondaryOnClickOnClick={(banner) => {
+                          secondaryOnClick={(banner) => {
                             setSelectedBanner(banner);
                             handleConfirmationDialog();
                           }}
