@@ -1,18 +1,17 @@
-import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Grid, InputAdornment, Paper, Typography, colors } from '@mui/material';
+import React, { Fragment, useEffect, useState, useRef } from 'react';
+import { Box, CardMedia, Grid, InputAdornment, Typography, colors } from '@mui/material';
 import PrimaryButton, { SecondaryButton } from '../../components/Button';
 import Dialog from '../../components/Dialog';
 import { useForm } from 'react-hook-form';
 import useToast from '../../hooks/useToast';
 import UploadService from '../../api/upload/UploadService';
-import { ErrorOutline, ImageRounded, Search, } from '@mui/icons-material';
+import { ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import InputField from '../../components/InputField';
 import CategoryServices from '../../api/categories/CategoryServices';
 import SelectField from '../../components/SelectField';
 import BannerServices from '../../api/banners/BannerServices';
 import Loader from '../../components/Loader';
 import Card from '../../components/Card';
-import TablePagination from '../../components/Pagination';
 import { useSearchParams } from 'react-router-dom';
 import useDebounce from '../../utils/Debounce';
 
@@ -21,23 +20,35 @@ function Banners() {
   const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [categories, setCategories] = useState([]);
   const [activeIds, setActiveIds] = useState([]);
   const [banners, setBanners] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [image, setImage] = useState("");
-  const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
-  const { showToast } = useToast();
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const limit = 10; // fixed limit for infinite scroll
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
 
-  const page = Number(searchParams.get("page")) || 1;
-  const limit = Number(searchParams.get("limit")) || 10;
+  const scrollContainerRef = useRef(null);
   const searchQuery = searchParams.get("search") || "";
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch
+  } = useForm({
+    defaultValues: { search: searchQuery || "" }
+  });
 
   const handleBannerDialog = () => setIsBannerDialogOpen((prevOpen) => !prevOpen);
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
@@ -50,7 +61,7 @@ function Banners() {
   };
 
   const uploadImage = async (e) => {
-    setIsImageLoading(true)
+    setIsImageLoading(true);
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
@@ -59,17 +70,17 @@ function Banners() {
       if (result) {
         showToast(result.message, "success");
         setImage(result.url);
-      };
+      }
     } catch (error) {
       showToast(error, "error");
     } finally {
       setIsImageLoading(false);
-    };
+    }
   };
 
   const getCategories = async () => {
     try {
-      const result = await CategoryServices.getCategories();
+      const result = await CategoryServices.getCategories({ limit: "all" });
       if (result.status) {
         const renamed = result.data.categories.map((item) => ({ name: item.name, value: item._id }));
         setCategories(renamed);
@@ -79,21 +90,28 @@ function Banners() {
     }
   };
 
-  const getBanners = async (value, pageNumber) => {
+  // Fetch banners (append or replace)
+  const getBanners = async (search, pageNumber, append = false) => {
     try {
-      const params = { search: value, page: pageNumber, limit: limit };
+      const params = { search, page: pageNumber, limit };
       const result = await BannerServices.getBanners(params);
       if (result.status) {
-        setBanners(result.data.banners);
-        setTotalPages(result.data.pagination.totalPages);
+        const newBanners = result.data.banners || [];
+        if (append) {
+          setBanners(prev => [...prev, ...newBanners]);
+        } else {
+          setBanners(newBanners);
+        }
         setTotalCount(result.data.pagination.total);
-        const ids = result.data.banners.filter(b => b.isActive).map(b => b._id);
-        setActiveIds(ids);
+        setHasMore(pageNumber < result.data.pagination.totalPages);
       }
     } catch (error) {
       showToast(error, "error");
+    } finally {
+      setIsDataLoading(false);
+      setIsLoadingMore(false);
     }
-  }
+  };
 
   const createBanner = async (formData) => {
     const obj = {
@@ -109,12 +127,16 @@ function Banners() {
         reset();
         setImage("");
         handleBannerDialog();
+        // Refresh list from page 1
+        setPage(1);
+        setHasMore(true);
+        setIsDataLoading(true);
+        await getBanners(searchQuery, 1, false);
       }
     } catch (error) {
-      showToast(error, "error")
+      showToast(error, "error");
     } finally {
       setIsLoading(false);
-      getBanners();
     }
   };
 
@@ -130,12 +152,16 @@ function Banners() {
       if (result.status) {
         showToast(result.message, "success");
         handleBannerDialog();
+        // Refresh list from page 1
+        setPage(1);
+        setHasMore(true);
+        setIsDataLoading(true);
+        await getBanners(searchQuery, 1, false);
       }
     } catch (error) {
-      showToast(error, "error")
+      showToast(error, "error");
     } finally {
       setIsLoading(false);
-      getBanners();
     }
   };
 
@@ -145,41 +171,42 @@ function Banners() {
       if (result.status) {
         showToast(result.message, "success");
         handleConfirmationDialog();
+        // Refresh list from page 1
+        setPage(1);
+        setHasMore(true);
+        setIsDataLoading(true);
+        await getBanners(searchQuery, 1, false);
       }
     } catch (error) {
-      showToast(error, "error")
-    } finally {
-      getBanners();
+      showToast(error, "error");
     }
   };
 
   const handleStatus = async (banner) => {
-    const obj = {}
-    if (banner.isActive) {
-      obj.isActive = false;
-    } else {
-      obj.isActive = true;
-    };
+    const obj = { isActive: !banner.isActive };
     try {
       const result = await BannerServices.updateStatus(banner._id, obj);
       if (result) {
         showToast(result?.message, "success");
-      };
+      }
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getBanners();
-    };
+      // Refresh list from page 1
+      setPage(1);
+      setHasMore(true);
+      setIsDataLoading(true);
+      await getBanners(searchQuery, 1, false);
+    }
   };
 
-  const searchValue = watch("search");
-  const debouncedSearch = useDebounce(searchValue, 500);
-
+  // Compute activeIds whenever banners change
   useEffect(() => {
-    getBanners();
-    getCategories();
-  }, []);
+    const ids = banners.filter(b => b.isActive).map(b => b._id);
+    setActiveIds(ids);
+  }, [banners]);
 
+  // Set default data when editing
   useEffect(() => {
     if (selectedBanner != null) {
       setDefaultData();
@@ -187,30 +214,54 @@ function Banners() {
       reset();
       setSelectedCategory("");
       setImage("");
-    };
+    }
   }, [selectedBanner]);
 
-  useEffect(() => {
-    getBanners(debouncedSearch, page);
-  }, [debouncedSearch, page]);
-
-  const debouncedInput = useDebounce(searchValue, 500);
+  // Handle search (debounced)
+  const searchValue = watch("search");
+  const debouncedSearch = useDebounce(searchValue, 500);
 
   useEffect(() => {
     setSearchParams((prev) => {
-      prev.set("page", 1);
-      prev.set("limit", limit);
-      prev.set("search", debouncedInput || "");
+      prev.set("search", debouncedSearch || "");
       return prev;
     });
-  }, [debouncedInput]);
+    // Reset and fetch first page on search change
+    setPage(1);
+    setHasMore(true);
+    setIsDataLoading(true);
+    getBanners(debouncedSearch, 1, false);
+  }, [debouncedSearch]);
 
+  // Scroll handler for infinite loading
   useEffect(() => {
-    setValue("search", searchQuery);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, clientHeight, scrollHeight } = container;
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        if (!isLoadingMore && hasMore && !isDataLoading) {
+          setIsLoadingMore(true);
+          const nextPage = page + 1;
+          setPage(nextPage);
+          getBanners(searchQuery, nextPage, true);
+        }
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isLoadingMore, hasMore, isDataLoading, page, searchQuery]);
+
+  // Load categories on mount
+  useEffect(() => {
+    getCategories();
   }, []);
 
   return (
     <Fragment>
+      {/* Create/Update Banner Dialog */}
       <Dialog
         maxWidth={"md"}
         fullWidth={true}
@@ -241,9 +292,7 @@ function Banners() {
                   id="uploadImage"
                   type="file"
                   onChange={uploadImage}
-                  style={{
-                    display: "none"
-                  }}
+                  style={{ display: "none" }}
                 />
                 <label
                   htmlFor='uploadImage'
@@ -253,6 +302,7 @@ function Banners() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    cursor: "pointer",
                   }}
                 >
                   {image != "" ? (
@@ -352,6 +402,8 @@ function Banners() {
           />
         </Grid>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
       <Dialog
         open={isConfirmationDialogOpen}
         handleClose={handleConfirmationDialog}
@@ -368,7 +420,7 @@ function Banners() {
           >
             <ErrorOutline sx={{ fontSize: 64, color: colors.red.A400 }} />
             <Typography sx={{ fontSize: 24, fontWeight: 600 }}>Are you sure?</Typography>
-            <Typography>You wont be able to revert this!</Typography>
+            <Typography>You won't be able to revert this!</Typography>
           </Box>
         </Grid>
         <Grid item md={6}>
@@ -378,6 +430,8 @@ function Banners() {
           <PrimaryButton fullWidth title={"Delete"} onClick={deleteBanner} />
         </Grid>
       </Dialog>
+
+      {/* Main Content */}
       <Box
         sx={{
           height: "100%",
@@ -403,12 +457,7 @@ function Banners() {
             />
           </Grid>
           <Grid item md={6}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end"
-              }}
-            >
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
               <PrimaryButton
                 title={"Create Banner"}
                 onClick={() => {
@@ -418,61 +467,54 @@ function Banners() {
               />
             </Box>
           </Grid>
+
           <Grid item md={12}>
             <Grid container spacing={2}>
               <Grid item md={12}>
                 <Box
+                  ref={scrollContainerRef}
                   sx={{
-                    height: "calc(100vh - 200px)",
+                    height: "calc(100vh - 188px)",
                     overflowY: "auto"
                   }}
                 >
-                  <Grid container spacing={2}>
-                    {banners.map((banner) => (
-                      <Grid item md={6}>
-                        <Card
-                          data={banner}
-                          primaryOnClick={(banner) => {
-                            setSelectedBanner(banner);
-                            handleBannerDialog();
-                          }}
-                          secondaryOnClick={(banner) => {
-                            setSelectedBanner(banner);
-                            handleConfirmationDialog();
-                          }}
-                          onChange={(banner) => handleStatus(banner)}
-                          activeIds={activeIds}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
+                  {isDataLoading && page === 1 ? (
+                    <Loader />
+                  ) : (
+                    <Grid container spacing={2}>
+                      {banners.map((banner, index) => (
+                        <Grid item md={6} key={index}>
+                          <Card
+                            data={banner}
+                            primaryOnClick={(banner) => {
+                              setSelectedBanner(banner);
+                              handleBannerDialog();
+                            }}
+                            secondaryOnClick={(banner) => {
+                              setSelectedBanner(banner);
+                              handleConfirmationDialog();
+                            }}
+                            onChange={(banner) => handleStatus(banner)}
+                            activeIds={activeIds}
+                          />
+                        </Grid>
+                      ))}
+                      {isLoadingMore && (
+                        <Grid item md={12} sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                          <Loader />
+                        </Grid>
+                      )}
+                    </Grid>
+                  )}
                 </Box>
               </Grid>
               <Grid item md={12}>
                 <Grid container alignItems={"center"}>
                   <Grid item md={6}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1
-                      }}
-                    >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Typography>Total Banners:</Typography>
                       <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
                     </Box>
-                  </Grid>
-                  <Grid item md={6}>
-                    <TablePagination
-                      page={page}
-                      totalPages={totalPages}
-                      onChange={(e, value) => {
-                        setSearchParams((prev) => {
-                          prev.set("page", value);
-                          return prev;
-                        });
-                      }}
-                    />
                   </Grid>
                 </Grid>
               </Grid>
@@ -482,6 +524,6 @@ function Banners() {
       </Box>
     </Fragment>
   );
-};
+}
 
 export default Banners;

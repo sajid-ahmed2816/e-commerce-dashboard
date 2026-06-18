@@ -7,6 +7,11 @@ const ProductServices = {
     return result;
   },
 
+  getOrderDetailById: async (id) => {
+    const result = await get(`${Routes.getOrderDetailById}/${id}`);
+    return result;
+  },
+
   deleteOrder: async (id) => {
     const result = await deleted(Routes.deleteOrder + `/${id}`);
     return result;

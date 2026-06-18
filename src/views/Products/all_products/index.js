@@ -1,8 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, CardMedia, Checkbox, Grid, IconButton, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Checkbox, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, Search } from '@mui/icons-material';
-import PrimaryButton, { SecondaryButton } from '../../../components/Button';
+import PrimaryButton, { SecondaryButton, IconButton } from '../../../components/Button';
 import TableRow from '../../../components/TableRow';
 import TableCell from '../../../components/TableCell';
 import Dialog from '../../../components/Dialog';
@@ -17,11 +17,11 @@ import TableHead from '../../../components/TableHead';
 import { Switch } from '../../../components/Switch';
 import Loader from '../../../components/Loader';
 
-const tableHead = ["Image", "Name", "Category", "Price", "Status", "Created At", "Actions"];
+const tableHead = ["Image", "Name", "Category", "Price", "Featured", "Status", "Created At", "Actions"];
 
 function Products() {
   const [isLoading, setIsLoading] = useState("");
-  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [activeIds, setActiveIds] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -35,15 +35,17 @@ function Products() {
   const [bulkFile, setBulkFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { register, setValue, watch } = useForm();
-  const { showToast } = useToast();
-
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 10;
   const searchQuery = searchParams.get("search") || "";
+
+  const { register, watch } = useForm({
+    defaultValues: { search: searchQuery || "" }
+  });
+  const { showToast } = useToast();
 
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
   const handleBulkDeleteDialog = () => setIsBulkDeleteDialogOpen((prev) => !prev);
@@ -70,9 +72,9 @@ function Products() {
       const result = await ProductServices.bulkUpload(formData);
       if (result.status) {
         showToast(result.message || "Bulk upload successful", "success");
-        handleBulkUploadDialog();
-        getProducts(); // Refresh product list
         setBulkFile(null);
+        handleBulkUploadDialog();
+        getProducts(searchValue, page, limit); // Refresh product list
       }
     } catch (error) {
       showToast(error?.message || "Upload failed", "error");
@@ -81,7 +83,7 @@ function Products() {
     }
   };
 
-  const getProducts = async (value, pageNumber, category) => {
+  const getProducts = async (value, pageNumber, limit, category) => {
     setIsDataLoading(true);
     try {
       const params = { search: value, page: pageNumber, limit: limit, category: category };
@@ -107,7 +109,7 @@ function Products() {
       if (result.status) {
         showToast(result.message, "success");
         handleConfirmationDialog();
-        getProducts();
+        getProducts(searchQuery, page, limit);
         setSelectedRows(prev => prev.filter(id => id !== selectedProduct?._id));
       }
     } catch (error) {
@@ -132,7 +134,7 @@ function Products() {
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getProducts();
+      getProducts(searchQuery, page, limit);
     };
   };
 
@@ -145,8 +147,8 @@ function Products() {
       if (allSuccessful) {
         showToast(`${selectedRows.length} product(s) deleted successfully`, "success");
         handleBulkDeleteDialog();
-        getProducts(); // Refresh list
-        setSelectedRows([]); // Clear selections after successful bulk delete
+        getProducts(searchQuery, page, limit);
+        setSelectedRows([]);
       } else {
         showToast("Some products could not be deleted", "error");
       }
@@ -193,29 +195,18 @@ function Products() {
     }
   };
 
-  const clearAllSelections = () => setSelectedRows([]);
-
   const searchValue = watch("search");
   const debouncedSearch = useDebounce(searchValue, 500);
 
   useEffect(() => {
-    getProducts(debouncedSearch, page);
-  }, [debouncedSearch, page, limit]);
-
-  const debouncedInput = useDebounce(searchValue, 500);
-
-  useEffect(() => {
     setSearchParams((prev) => {
-      prev.set("page", 1);
+      prev.set("page", page);
       prev.set("limit", limit);
-      prev.set("search", debouncedInput || "");
+      prev.set("search", debouncedSearch || "");
       return prev;
     });
-  }, [debouncedInput]);
-
-  useEffect(() => {
-    setValue("search", searchQuery);
-  }, []);
+    getProducts(debouncedSearch, page, limit);
+  }, [debouncedSearch, page, limit]);
 
   const currentPageIds = products.map(p => p._id);
   const allSelectedOnCurrentPage = currentPageIds.length > 0 && currentPageIds.every(id => selectedRows.includes(id));
@@ -315,7 +306,6 @@ function Products() {
                   placeholder={"Search here..."}
                   size={"small"}
                   fullWidth={true}
-                  value={watch("search")}
                   register={register("search")}
                   InputProps={{
                     startAdornment: (
@@ -379,14 +369,14 @@ function Products() {
                       </Box>
                     </TableCell>
                     {tableHead.map((ind) => (
-                      <TableCell key={ind}>{ind}</TableCell>
+                      <TableCell key={ind} sx={{ textAlign: (ind === "Image" || ind === "Actions") ? "center" : "left" }}>{ind}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {isDataLoading ? (
                     <TableRow>
-                      <TableCell colSpan={8} sx={{ textAlign: "center" }}>
+                      <TableCell colSpan={9} sx={{ textAlign: "center" }}>
                         <Loader />
                       </TableCell>
                     </TableRow>
@@ -398,10 +388,11 @@ function Products() {
                           onChange={() => handleSelectRow(item._id)}
                         />
                       </TableCell>
-                      <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
+                      <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "contain" }} /></TableCell>
                       <TableCell><Box sx={{ textWrap: "wrap" }}>{item.name}</Box></TableCell>
                       <TableCell>{item?.category?.name}</TableCell>
                       <TableCell>{item.price}</TableCell>
+                      <TableCell><Chip label={item?.isFeatured ? "Yes" : "No"} variant={"outlined"} color={item?.isFeatured ? "success" : "error"} size={"small"} /></TableCell>
                       <TableCell>
                         <Switch
                           checked={activeIds.includes(item._id)}
@@ -411,16 +402,22 @@ function Products() {
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <IconButton onClick={() => {
-                            setSelectedProduct(item);
-                            navigate(`/products/update-product/${item._id}`, { state: item });
-                          }}>
+                          <IconButton
+                            type={"edit"}
+                            onClick={() => {
+                              setSelectedProduct(item);
+                              navigate(`/products/update-product/${item._id}`, { state: { ...item, page, limit, searchQuery } });
+                            }}
+                          >
                             <Edit />
                           </IconButton>
-                          <IconButton onClick={() => {
-                            setSelectedProduct(item);
-                            handleConfirmationDialog();
-                          }}>
+                          <IconButton
+                            type={"delete"}
+                            onClick={() => {
+                              setSelectedProduct(item);
+                              handleConfirmationDialog();
+                            }}
+                          >
                             <Delete />
                           </IconButton>
                         </Box>
@@ -428,7 +425,7 @@ function Products() {
                     </TableRow>
                   )) : (
                     <TableRow>
-                      <TableCell colSpan={8} sx={{ textAlign: "center" }}>
+                      <TableCell colSpan={9} sx={{ textAlign: "center" }}>
                         No data available
                       </TableCell>
                     </TableRow>

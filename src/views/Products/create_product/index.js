@@ -12,6 +12,7 @@ import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import Loader from '../../../components/Loader';
 import SizeServices from '../../../api/sizes/SizeServices';
 import MultiSelectField from '../../../components/MultiSelectField';
+import { Switch } from '../../../components/Switch';
 
 function CreateProduct() {
   const [image, setImage] = useState("");
@@ -20,7 +21,16 @@ function CreateProduct() {
   const [categories, setCategories] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const { register, handleSubmit, formState: { errors }, reset, watch, control } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    control,
+    setValue,
+    getValues
+  } = useForm({
     defaultValues: {
       size: []
     }
@@ -47,13 +57,15 @@ function CreateProduct() {
 
   const createProduct = async (formData) => {
     setIsLoading(true);
+    const isFeatured = getValues("isFeatured");
     const obj = {
       name: formData.name,
       category: formData.category,
       size: formData.size,
       image: image,
       price: formData.price,
-      description: formData.description
+      description: formData.description,
+      isFeatured: isFeatured
     };
     try {
       const result = await ProductServices.createProduct(obj);
@@ -129,11 +141,37 @@ function CreateProduct() {
           onSubmit={handleSubmit(createProduct)}
         >
           <Grid item md={12}>
-            <Box>
-              <Typography variant='h6' sx={{ fontWeight: 600 }}>
-                Create Product
-              </Typography>
-            </Box>
+            <Grid container spacing={2}>
+              <Grid item md={6}>
+                <Box>
+                  <Typography variant='h6' sx={{ fontWeight: 600 }}>
+                    Create Product
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item md={6}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <Typography
+                    component={"label"}
+                    variant={"body2"}
+                    htmlFor={"isFeatured"}
+                  >
+                    Mark this as featured?
+                  </Typography>
+                  <Switch
+                    id={"isFeatured"}
+                    checked={watch("isFeatured")}
+                    onChange={(e) => setValue("isFeatured", e.target.checked)}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
           </Grid>
           <Grid item md={6}>
             <Box

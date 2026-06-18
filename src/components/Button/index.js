@@ -1,6 +1,7 @@
 import React from 'react';
-import { Button, CircularProgress } from '@mui/material';
-import colors from '../../assets/styles/colors';
+import { Button, CircularProgress, colors } from '@mui/material';
+import IcButton from "@mui/material/IconButton";
+import Colors from '../../assets/styles/colors';
 
 function PrimaryButton({ title, sx, startIcon, isLoading, ...props }) {
   return (
@@ -8,14 +9,14 @@ function PrimaryButton({ title, sx, startIcon, isLoading, ...props }) {
       variant={"contained"}
       startIcon={startIcon}
       sx={{
-        background: colors.primary,
-        color: colors.white,
+        background: Colors.primary,
+        color: Colors.white,
         borderRadius: "6px",
         textTransform: "capitalize"
       }}
       {...props}
     >
-      {isLoading ? <CircularProgress size={25} sx={{ color: colors.primary }} /> : title}
+      {isLoading ? <CircularProgress size={25} sx={{ color: Colors.primary }} /> : title}
     </Button>
   );
 };
@@ -26,8 +27,8 @@ function SecondaryButton({ title, sx, startIcon, ...props }) {
       variant={"outlined"}
       startIcon={startIcon}
       sx={{
-        borderColor: colors.primary,
-        color: colors.primary,
+        borderColor: Colors.primary,
+        color: Colors.primary,
         borderRadius: "6px",
         textTransform: "capitalize"
       }}
@@ -38,5 +39,47 @@ function SecondaryButton({ title, sx, startIcon, ...props }) {
   );
 };
 
-export { SecondaryButton };
+function IconButton({ type, onClick, children }) {
+  const editBtnStyle = {
+    background: "transparent",
+    border: `1px solid ${colors.blue.A700}`,
+    "svg": {
+      fontSize: "22px",
+      fill: colors.blue.A700
+    },
+    ":hover": {
+      border: `1px solid ${colors.blue.A700}`,
+      background: colors.blue.A700,
+      "svg": {
+        fill: "#ffffff"
+      }
+    }
+  };
+  const deleteBtnStyle = {
+    background: "transparent",
+    border: `1px solid ${colors.red.A700}`,
+    "svg": {
+      fontSize: "22px",
+      fill: colors.red.A700
+    },
+    ":hover": {
+      border: `1px solid ${colors.red.A700}`,
+      background: colors.red.A700,
+      "svg": {
+        fill: "#ffffff"
+      }
+    }
+  }
+  return (
+    <IcButton
+      size={"small"}
+      sx={type === "edit" ? editBtnStyle : type === "delete" ? deleteBtnStyle : {}}
+      onClick={onClick}
+    >
+      {children}
+    </IcButton>
+  )
+}
+
+export { SecondaryButton, IconButton };
 export default PrimaryButton;

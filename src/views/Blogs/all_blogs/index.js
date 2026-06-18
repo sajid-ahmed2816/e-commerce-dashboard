@@ -1,6 +1,6 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, CardMedia, Grid, InputAdornment, Paper, Typography, colors } from '@mui/material';
+import { Box, Grid, InputAdornment, Typography, colors } from '@mui/material';
 import { ErrorOutline, Search } from '@mui/icons-material';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import Dialog from '../../../components/Dialog';
@@ -8,53 +8,68 @@ import InputField from '../../../components/InputField';
 import useToast from '../../../hooks/useToast';
 import BlogServices from '../../../api/blogs/BlogServices';
 import useDebounce from '../../../utils/Debounce';
-import TablePagination from '../../../components/Pagination';
 import { useForm } from 'react-hook-form';
 import Card from '../../../components/Card';
+import Loader from '../../../components/Loader';
 
 function Blogs() {
-  const [isLoading, setIsLoading] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [blogs, setBlogs] = useState([]);
   const [activeIds, setActiveIds] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const limit = 10; // fixed limit for infinite scroll
 
-  const { register, setValue, watch } = useForm();
   const { showToast } = useToast();
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const page = Number(searchParams.get("page")) || 1;
-  const limit = Number(searchParams.get("limit")) || 10;
   const searchQuery = searchParams.get("search") || "";
+  const { register, watch } = useForm({
+    defaultValues: { search: searchQuery || "" }
+  });
+
+  const scrollContainerRef = useRef(null);
 
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
 
-  const getBlogs = async (value, pageNumber) => {
+  // Fetch blogs (append or replace)
+  const getBlogs = async (search, pageNumber, append = false) => {
     try {
-      const params = { search: value, page: pageNumber, limit: limit };
+      const params = { search, page: pageNumber, limit };
       const result = await BlogServices.getBlogs(params);
       if (result.status) {
-        const arr = result?.data?.blogs?.map(b => ({
+        const newBlogs = result?.data?.blogs?.map(b => ({
           ...b,
           image: b.thumbnail,
           tagline: b.title,
           category: { name: b.slug }
-        }))
-        setBlogs(arr);
-        setTotalPages(result.data.pagination.totalPages);
+        })) || [];
+
+        if (append) {
+          setBlogs(prev => [...prev, ...newBlogs]);
+        } else {
+          setBlogs(newBlogs);
+        }
+
         setTotalCount(result.data.pagination.total);
-        const ids = result.data.blogs.filter(p => p.status == "published").map(p => p._id);
-        setActiveIds(ids);
+        setHasMore(pageNumber < result.data.pagination.totalPages);
       }
     } catch (error) {
       showToast(error, "error");
-    };
+    } finally {
+      setIsDataLoading(false);
+      setIsLoadingMore(false);
+    }
   };
 
+  // Delete blog
   const deleteBlog = async () => {
     setIsLoading(true);
     try {
@@ -62,55 +77,81 @@ function Blogs() {
       if (result.status) {
         showToast(result.message, "success");
         handleConfirmationDialog();
-        getBlogs();
+        // Refresh list after deletion (reset to page 1)
+        setPage(1);
+        setHasMore(true);
+        setIsDataLoading(true);
+        await getBlogs(searchQuery, 1, false);
       }
     } catch (error) {
-      showToast(error, "error")
+      showToast(error, "error");
     } finally {
       setIsLoading(false);
-    };
+    }
   };
 
+  // Toggle status
   const handleStatus = async (item) => {
-    const obj = {}
-    if (item.status == "published") {
-      obj.status = "draft";
-    } else {
-      obj.status = "published";
-    };
+    const obj = { status: item.status === "published" ? "draft" : "published" };
     try {
       const result = await BlogServices.updateStatus(item._id, obj);
       if (result) {
         showToast(result?.message, "success");
-      };
+      }
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getBlogs();
-    };
+      // Refresh list (reset to page 1)
+      setPage(1);
+      setHasMore(true);
+      setIsDataLoading(true);
+      await getBlogs(searchQuery, 1, false);
+    }
   };
 
+  // Compute activeIds whenever blogs change
+  useEffect(() => {
+    const ids = blogs.filter(p => p.status === "published").map(p => p._id);
+    setActiveIds(ids);
+  }, [blogs]);
+
+  // Handle search (debounced)
   const searchValue = watch("search");
   const debouncedSearch = useDebounce(searchValue, 500);
 
   useEffect(() => {
-    getBlogs(debouncedSearch, page);
-  }, [debouncedSearch, page]);
-
-  const debouncedInput = useDebounce(searchValue, 500);
-
-  useEffect(() => {
     setSearchParams((prev) => {
-      prev.set("page", 1);
-      prev.set("limit", limit);
-      prev.set("search", debouncedInput || "");
+      prev.set("search", debouncedSearch || "");
       return prev;
     });
-  }, [debouncedInput]);
+    // Reset and fetch first page on search change
+    setPage(1);
+    setHasMore(true);
+    setIsDataLoading(true);
+    getBlogs(debouncedSearch, 1, false);
+  }, [debouncedSearch]);
 
+  // Scroll handler for infinite loading
   useEffect(() => {
-    setValue("search", searchQuery);
-  }, []);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, clientHeight, scrollHeight } = container;
+      // Load more when scrolled within 100px of bottom
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        if (!isLoadingMore && hasMore && !isDataLoading) {
+          setIsLoadingMore(true);
+          const nextPage = page + 1;
+          setPage(nextPage);
+          getBlogs(searchQuery, nextPage, true);
+        }
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isLoadingMore, hasMore, isDataLoading, page, searchQuery]);
 
   return (
     <Fragment>
@@ -120,25 +161,14 @@ function Blogs() {
         title={"Delete Blog"}
       >
         <Grid item md={12}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1
-            }}
-          >
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
             <ErrorOutline sx={{ fontSize: 64, color: colors.red.A400 }} />
             <Typography sx={{ fontSize: 24, fontWeight: 600 }}>Are you sure?</Typography>
-            <Typography>You wont be able to revert this!</Typography>
+            <Typography>You won't be able to revert this!</Typography>
           </Box>
         </Grid>
         <Grid item md={6}>
-          <SecondaryButton
-            fullWidth
-            title={"Cancel"}
-            onClick={handleConfirmationDialog}
-          />
+          <SecondaryButton fullWidth title={"Cancel"} onClick={handleConfirmationDialog} />
         </Grid>
         <Grid item md={6}>
           <PrimaryButton
@@ -150,13 +180,8 @@ function Blogs() {
           />
         </Grid>
       </Dialog>
-      <Box
-        sx={{
-          height: "100%",
-          width: "100%",
-          p: 2
-        }}
-      >
+
+      <Box sx={{ height: "100%", width: "100%", p: 2 }}>
         <Grid container spacing={2}>
           <Grid item md={12}>
             <Grid container spacing={2}>
@@ -164,7 +189,7 @@ function Blogs() {
                 <InputField
                   placeholder={"Search here..."}
                   size={"small"}
-                  fullWidth={true}
+                  fullWidth
                   value={watch("search")}
                   register={register("search")}
                   InputProps={{
@@ -177,80 +202,68 @@ function Blogs() {
                 />
               </Grid>
               <Grid item md={6}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end"
-                  }}
-                >
+                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                   <PrimaryButton
                     title={"Create Blog"}
                     onClick={() => {
                       setSelectedBlog(null);
-                      navigate("/blogs/create-blog")
+                      navigate("/blogs/create-blog");
                     }}
                   />
                 </Box>
               </Grid>
             </Grid>
           </Grid>
+
           <Grid item md={12}>
             <Grid container spacing={2}>
               <Grid item md={12}>
                 <Box
+                  ref={scrollContainerRef}
                   sx={{
-                    height: "calc(100vh - 200px)",
+                    height: "calc(100vh - 188px)",
                     overflowY: "auto"
                   }}
                 >
-                  <Grid container spacing={2}>
-                    {blogs.map((item, ind) => (
-                      <Grid item md={4} key={ind}>
-                        <Card
-                          data={item}
-                          primaryOnClick={(blog) => {
-                            setSelectedBlog(blog);
-                            navigate(`/blogs/update-blog/${blog._id}`, {
-                              state: blog
-                            });
-                          }}
-                          secondaryOnClick={(blog) => {
-                            setSelectedBlog(blog);
-                            handleConfirmationDialog();
-                          }}
-                          onChange={(blog) => handleStatus(blog)}
-                          activeIds={activeIds}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
+                  {isDataLoading && page === 1 ? (
+                    <Loader />
+                  ) : (
+                    <Grid container spacing={2}>
+                      {blogs.map((item, ind) => (
+                        <Grid item md={4} key={ind}>
+                          <Card
+                            data={item}
+                            primaryOnClick={(blog) => {
+                              setSelectedBlog(blog);
+                              navigate(`/blogs/update-blog/${blog._id}`, {
+                                state: blog
+                              });
+                            }}
+                            secondaryOnClick={(blog) => {
+                              setSelectedBlog(blog);
+                              handleConfirmationDialog();
+                            }}
+                            onChange={(blog) => handleStatus(blog)}
+                            activeIds={activeIds}
+                          />
+                        </Grid>
+                      ))}
+                      {isLoadingMore && (
+                        <Grid item md={12} sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                          <Loader />
+                        </Grid>
+                      )}
+                    </Grid>
+                  )}
                 </Box>
               </Grid>
               <Grid item md={12}>
                 <Grid container alignItems={"center"}>
                   <Grid item md={6}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1
-                      }}
-                    >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Typography>Total Blogs:</Typography>
                       <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
                     </Box>
-                  </Grid>
-                  <Grid item md={6}>
-                    <TablePagination
-                      page={page}
-                      totalPages={totalPages}
-                      onChange={(e, value) => {
-                        setSearchParams((prev) => {
-                          prev.set("page", value);
-                          return prev;
-                        });
-                      }}
-                    />
                   </Grid>
                 </Grid>
               </Grid>
@@ -260,6 +273,6 @@ function Blogs() {
       </Box>
     </Fragment>
   );
-};
+}
 
 export default Blogs;

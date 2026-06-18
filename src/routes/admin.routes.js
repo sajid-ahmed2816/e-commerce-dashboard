@@ -5,13 +5,13 @@ import CreateProduct from "../views/Products/create_product";
 import Categories from "../views/Categories";
 import Banners from "../views/Banners";
 import Users from "../views/Users";
-import About from "../views/About";
 import Blogs from "../views/Blogs/all_blogs";
 import UpdateProduct from "../views/Products/update_product";
 import Sizes from "../views/Sizes";
 import Offers from "../views/Offers";
 import CreateBlog from "../views/Blogs/create_blog";
 import UpdateBlog from "../views/Blogs/update_blog";
+import OrderDetail from "../views/Orders/order_detail";
 
 const adminRoutes = [
   {
@@ -21,6 +21,10 @@ const adminRoutes = [
   {
     path: "/orders",
     component: <Orders />,
+  },
+  {
+    path: "/orders/order-detail/:id",
+    component: <OrderDetail />,
   },
   {
     path: "/products/create-product",
@@ -53,10 +57,6 @@ const adminRoutes = [
   {
     path: "/users",
     component: <Users />,
-  },
-  {
-    path: "/about",
-    component: <About />,
   },
   {
     path: "/blogs",

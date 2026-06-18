@@ -1,8 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Chip, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Chip, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
-import PrimaryButton, { SecondaryButton } from '../../components/Button';
+import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
 import Dialog from '../../components/Dialog';
@@ -24,24 +24,44 @@ function Categories() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCULoading, setIsCUDLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [activeIds, setActiveIds] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [image, setImage] = useState("");
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const { register, handleSubmit, formState: { errors }, reset, setValue, getValues, watch } = useForm();
   const { showToast } = useToast();
 
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 10;
   const searchQuery = searchParams.get("search") || "";
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    getValues,
+    watch
+  } = useForm({
+    defaultValues: { search: searchQuery || "" }
+  });
+
   const handleCategoryDialog = () => setIsCategoryDialogOpen((prevOpen) => !prevOpen);
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
+
+  const handleRowsPerPageChange = (event) => {
+    const newLimit = parseInt(event.target.value, 10);
+    setSearchParams((prev) => {
+      prev.set("limit", newLimit);
+      prev.set("page", 1);  // Reset to first page
+      return prev;
+    });
+  };
 
   const setDefaultData = () => {
     setValue("categoryName", selectedCategory?.name);
@@ -69,6 +89,7 @@ function Categories() {
   };
 
   const createCategory = async (formData) => {
+    setIsCUDLoading(true);
     const isPopular = getValues("isPopular");
     const obj = {
       name: formData.categoryName,
@@ -88,11 +109,13 @@ function Categories() {
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getCategories();
+      setIsCUDLoading(false);
+      getCategories(searchQuery, page, limit);
     }
   };
 
   const updateCategory = async (formData) => {
+    setIsCUDLoading(true);
     const isPopular = getValues("isPopular");
     const obj = {
       name: formData.categoryName,
@@ -109,11 +132,12 @@ function Categories() {
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getCategories();
+      setIsCUDLoading(false);
+      getCategories(searchQuery, page, limit);
     }
   };
 
-  const getCategories = async (value, pageNumber) => {
+  const getCategories = async (value, pageNumber, limit) => {
     try {
       const params = { search: value, page: pageNumber, limit: limit };
       const result = await CategoryServices.getCategories(params);
@@ -126,10 +150,13 @@ function Categories() {
       };
     } catch (error) {
       showToast(error, "error")
+    } finally {
+      setIsDataLoading(false);
     };
   };
 
   const deleteCategory = async () => {
+    setIsCUDLoading(true);
     try {
       const result = await CategoryServices.deleteCategory(selectedCategory?._id);
       if (result.status) {
@@ -139,7 +166,8 @@ function Categories() {
     } catch (error) {
       showToast(error, "error")
     } finally {
-      getCategories();
+      setIsCUDLoading(false);
+      getCategories(searchQuery, page, limit);
     }
   };
 
@@ -158,16 +186,12 @@ function Categories() {
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getCategories();
+      getCategories(searchQuery, page, limit);
     };
   };
 
   const searchValue = watch("search");
   const debouncedSearch = useDebounce(searchValue, 500);
-
-  useEffect(() => {
-    getCategories(debouncedSearch, page);
-  }, [debouncedSearch, page]);
 
   useEffect(() => {
     if (selectedCategory != null) {
@@ -178,20 +202,15 @@ function Categories() {
     };
   }, [selectedCategory]);
 
-  const debouncedInput = useDebounce(searchValue, 500);
-
   useEffect(() => {
     setSearchParams((prev) => {
       prev.set("page", 1);
       prev.set("limit", limit);
-      prev.set("search", debouncedInput || "");
+      prev.set("search", debouncedSearch || "");
       return prev;
     });
-  }, [debouncedInput]);
-
-  useEffect(() => {
-    setValue("search", searchQuery);
-  }, []);
+    getCategories(debouncedSearch, page, limit);
+  }, [debouncedSearch, page, limit]);
 
   return (
     <Fragment>
@@ -404,7 +423,6 @@ function Categories() {
                   placeholder={"Search here..."}
                   size={"small"}
                   fullWidth={true}
-                  value={watch("search")}
                   register={register("search")}
                   InputProps={{
                     startAdornment: (
@@ -444,12 +462,18 @@ function Categories() {
                 <TableHead>
                   <TableRow>
                     {tableHead.map((ind) => (
-                      <TableCell key={ind}>{ind}</TableCell>
+                      <TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {categories.map((item, ind) => (
+                  {isDataLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={8}>
+                        <Loader />
+                      </TableCell>
+                    </TableRow>
+                  ) : categories.length > 0 ? categories.map((item, ind) => (
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
                       <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
@@ -468,10 +492,12 @@ function Categories() {
                           sx={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "center",
                             gap: 1
                           }}
                         >
                           <IconButton
+                            type={"edit"}
                             onClick={() => {
                               setSelectedCategory(item);
                               handleCategoryDialog();
@@ -480,6 +506,7 @@ function Categories() {
                             <Edit />
                           </IconButton>
                           <IconButton
+                            type={"delete"}
                             onClick={() => {
                               setSelectedCategory(item);
                               handleConfirmationDialog();
@@ -490,7 +517,13 @@ function Categories() {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={8}>
+                        No data available
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -519,6 +552,8 @@ function Categories() {
                       return prev;
                     });
                   }}
+                  rowsPerPage={limit}
+                  onRowsPerPageChange={handleRowsPerPageChange}
                 />
               </Grid>
             </Grid>

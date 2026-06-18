@@ -1,8 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
-import PrimaryButton, { SecondaryButton } from '../../components/Button';
+import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
 import Dialog from '../../components/Dialog';
@@ -15,10 +15,13 @@ import TablePagination from '../../components/Pagination';
 import moment from 'moment';
 import { Switch } from '../../components/Switch';
 import TableHead from '../../components/TableHead';
+import Loader from '../../components/Loader';
 
 const tableHead = ["S.No", "Size", "Status", "Created At", "Actions"];
 
 function Sizes() {
+  const [isLoading, setIsLoading] = useState("");
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [isSizeDialogOpen, setIsSizeDialogOpen] = useState(false);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [sizes, setSizes] = useState([]);
@@ -26,18 +29,35 @@ function Sizes() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
-  const { showToast } = useToast();
 
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 10;
   const searchQuery = searchParams.get("search") || "";
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch
+  } = useForm({
+    defaultValues: { search: searchQuery || "" }
+  });
+  const { showToast } = useToast();
+
   const handleSizeDialog = () => setIsSizeDialogOpen((prevOpen) => !prevOpen);
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
+
+  const handleRowsPerPageChange = (event) => {
+    const newLimit = parseInt(event.target.value, 10);
+    setSearchParams((prev) => {
+      prev.set("limit", newLimit);
+      prev.set("page", 1);  // Reset to first page
+      return prev;
+    });
+  };
 
   const setDefaultData = () => {
     setValue("size", selectedSize?.size);
@@ -45,6 +65,7 @@ function Sizes() {
   };
 
   const createSize = async (formData) => {
+    setIsLoading(true);
     const obj = {
       size: formData.size,
       description: formData.description,
@@ -59,11 +80,13 @@ function Sizes() {
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getSizes();
+      setIsLoading(false);
+      getSizes(searchQuery, page, limit);
     }
   };
 
   const updateSize = async (formData) => {
+    setIsLoading(true);
     const obj = {
       size: formData.size,
       description: formData.description,
@@ -77,11 +100,12 @@ function Sizes() {
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getSizes();
+      setIsLoading(false);
+      getSizes(searchQuery, page, limit);
     }
   };
 
-  const getSizes = async (value, pageNumber) => {
+  const getSizes = async (value, pageNumber, limit) => {
     try {
       const params = { search: value, page: pageNumber, limit: limit };
       const result = await SizeServices.getSizes(params);
@@ -94,10 +118,13 @@ function Sizes() {
       };
     } catch (error) {
       showToast(error, "error")
+    } finally {
+      setIsDataLoading(false);
     };
   };
 
   const deleteSize = async () => {
+    setIsLoading(true);
     try {
       const result = await SizeServices.deleteSize(selectedSize?._id);
       if (result.status) {
@@ -107,7 +134,8 @@ function Sizes() {
     } catch (error) {
       showToast(error, "error")
     } finally {
-      getSizes();
+      setIsLoading(false);
+      getSizes(searchQuery, page, limit);
     }
   };
 
@@ -126,16 +154,12 @@ function Sizes() {
     } catch (error) {
       showToast(error, "error");
     } finally {
-      getSizes();
+      getSizes(searchQuery, page, limit);
     };
   };
 
   const searchValue = watch("search");
   const debouncedSearch = useDebounce(searchValue, 500);
-
-  useEffect(() => {
-    getSizes(debouncedSearch, page);
-  }, [debouncedSearch, page]);
 
   useEffect(() => {
     if (selectedSize != null) {
@@ -145,20 +169,15 @@ function Sizes() {
     };
   }, [selectedSize]);
 
-  const debouncedInput = useDebounce(searchValue, 500);
-
   useEffect(() => {
     setSearchParams((prev) => {
       prev.set("page", 1);
       prev.set("limit", limit);
-      prev.set("search", debouncedInput || "");
+      prev.set("search", debouncedSearch || "");
       return prev;
     });
-  }, [debouncedInput]);
-
-  useEffect(() => {
-    setValue("search", searchQuery);
-  }, []);
+    getSizes(debouncedSearch, page, limit);
+  }, [debouncedSearch, page, limit]);
 
   return (
     <Fragment>
@@ -205,7 +224,7 @@ function Sizes() {
               <SecondaryButton title={"Cancel"} fullWidth onClick={handleSizeDialog} />
             </Grid>
             <Grid item md={6}>
-              <PrimaryButton title={"Submit"} fullWidth type={"submit"} />
+              <PrimaryButton title={"Submit"} fullWidth type={"submit"} isLoading={isLoading} isDisabled={isLoading} />
             </Grid>
           </Grid>
         </Grid>
@@ -233,7 +252,7 @@ function Sizes() {
           <SecondaryButton fullWidth title={"Cancel"} onClick={handleConfirmationDialog} />
         </Grid>
         <Grid item md={6}>
-          <PrimaryButton fullWidth title={"Delete"} onClick={deleteSize} />
+          <PrimaryButton fullWidth title={"Delete"} onClick={deleteSize} isLoading={isLoading} isDisabled={isLoading} />
         </Grid>
       </Dialog>
       <Box
@@ -291,12 +310,18 @@ function Sizes() {
                 <TableHead>
                   <TableRow>
                     {tableHead.map((ind) => (
-                      <TableCell key={ind}>{ind}</TableCell>
+                      <TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sizes.map((item, ind) => (
+                  {isDataLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5}>
+                        <Loader />
+                      </TableCell>
+                    </TableRow>
+                  ) : sizes.length > 0 ? sizes.map((item, ind) => (
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
                       <TableCell>{item.size}</TableCell>
@@ -312,10 +337,12 @@ function Sizes() {
                           sx={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "center",
                             gap: 1
                           }}
                         >
                           <IconButton
+                            type={"edit"}
                             onClick={() => {
                               setSelectedSize(item);
                               handleSizeDialog();
@@ -324,6 +351,7 @@ function Sizes() {
                             <Edit />
                           </IconButton>
                           <IconButton
+                            type={"delete"}
                             onClick={() => {
                               setSelectedSize(item);
                               handleConfirmationDialog();
@@ -334,7 +362,13 @@ function Sizes() {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={5} sx={{ textAlign: "center" }}>
+                        No data available
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -363,6 +397,8 @@ function Sizes() {
                       return prev;
                     });
                   }}
+                  rowsPerPage={limit}
+                  onRowsPerPageChange={handleRowsPerPageChange}
                 />
               </Grid>
             </Grid>

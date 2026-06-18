@@ -1,8 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
-import PrimaryButton, { SecondaryButton } from '../../components/Button';
+import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
 import Dialog from '../../components/Dialog';
@@ -14,19 +14,19 @@ import TablePagination from '../../components/Pagination';
 import { useForm } from 'react-hook-form';
 import moment from 'moment';
 import TableHead from '../../components/TableHead';
+import Loader from '../../components/Loader';
 
 const tableHead = ["S.No", "Name", "Email", "Created At", "Actions"];
 
 function Users() {
   const [isLoading, setIsLoading] = useState("");
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
   const { showToast } = useToast();
 
   const navigate = useNavigate();
@@ -36,10 +36,29 @@ function Users() {
   const limit = Number(searchParams.get("limit")) || 10;
   const searchQuery = searchParams.get("search") || "";
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch
+  } = useForm({
+    defaultValues: { search: searchQuery || "" }
+  });
+
   const handleUserDialog = () => setIsUserDialogOpen((prevOpen) => !prevOpen);
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
 
-  const getUsers = async (value, pageNumber, category) => {
+  const handleRowsPerPageChange = (event) => {
+    const newLimit = parseInt(event.target.value, 10);
+    setSearchParams((prev) => {
+      prev.set("limit", newLimit);
+      prev.set("page", 1);  // Reset to first page
+      return prev;
+    });
+  };
+
+  const getUsers = async (value, pageNumber, limit) => {
     try {
       const params = { search: value, page: pageNumber, limit: limit };
       const result = await UserServices.getUsers(params);
@@ -50,7 +69,9 @@ function Users() {
       }
     } catch (error) {
       showToast(error, "error")
-    }
+    } finally {
+      setIsDataLoading(false);
+    };
   };
 
   const updateUser = async (formData) => {
@@ -80,7 +101,7 @@ function Users() {
       if (result.status) {
         showToast(result.message, "success");
         handleConfirmationDialog();
-        getUsers();
+        getUsers(searchQuery, page, limit);
       }
     } catch (error) {
       showToast(error, "error")
@@ -93,23 +114,14 @@ function Users() {
   const debouncedSearch = useDebounce(searchValue, 500);
 
   useEffect(() => {
-    getUsers(debouncedSearch, page);
-  }, [debouncedSearch, page]);
-
-  const debouncedInput = useDebounce(searchValue, 500);
-
-  useEffect(() => {
     setSearchParams((prev) => {
       prev.set("page", 1);
       prev.set("limit", limit);
-      prev.set("search", debouncedInput || "");
+      prev.set("search", debouncedSearch || "");
       return prev;
     });
-  }, [debouncedInput]);
-
-  useEffect(() => {
-    setValue("search", searchQuery);
-  }, []);
+    getUsers(debouncedSearch, page, limit);
+  }, [debouncedSearch, page, limit]);
 
   return (
     <Fragment>
@@ -230,7 +242,6 @@ function Users() {
                   placeholder={"Search here..."}
                   size={"small"}
                   fullWidth={true}
-                  value={watch("search")}
                   register={register("search")}
                   InputProps={{
                     startAdornment: (
@@ -254,12 +265,18 @@ function Users() {
                 <TableHead>
                   <TableRow>
                     {tableHead.map((ind) => (
-                      <TableCell key={ind}>{ind}</TableCell>
+                      <TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {users.map((item, ind) => (
+                  {isDataLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5}>
+                        <Loader />
+                      </TableCell>
+                    </TableRow>
+                  ) : users.length > 0 ? users.map((item, ind) => (
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
                       <TableCell>{`${item.firstName} ${item.lastName}`}</TableCell>
@@ -270,10 +287,12 @@ function Users() {
                           sx={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "center",
                             gap: 1
                           }}
                         >
                           <IconButton
+                            type={"edit"}
                             onClick={() => {
                               setSelectedUser(item);
                               handleUserDialog();
@@ -282,6 +301,7 @@ function Users() {
                             <Edit />
                           </IconButton>
                           <IconButton
+                            type={"delete"}
                             onClick={() => {
                               setSelectedUser(item);
                               handleConfirmationDialog();
@@ -292,7 +312,13 @@ function Users() {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={5} sx={{ textAlign: "center" }}>
+                        No data available
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -321,6 +347,8 @@ function Users() {
                       return prev;
                     });
                   }}
+                  rowsPerPage={limit}
+                  onRowsPerPageChange={handleRowsPerPageChange}
                 />
               </Grid>
             </Grid>

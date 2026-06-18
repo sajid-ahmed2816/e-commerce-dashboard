@@ -1,8 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Grid, IconButton, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
-import PrimaryButton, { SecondaryButton } from '../../components/Button';
+import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
 import Dialog from '../../components/Dialog';
@@ -16,10 +16,13 @@ import moment from 'moment';
 import { Switch } from '../../components/Switch';
 import TableHead from '../../components/TableHead';
 import SelectField from '../../components/SelectField';
+import Loader from '../../components/Loader';
 
 const tableHead = ["S.No", "Name", "Color", "Discount Type", "Discount Value", "Start Date", "End Date", "Status", "Created At", "Actions"];
 
 function Offers() {
+	const [isLoading, setIsLoading] = useState("");
+	const [isDataLoading, setIsDataLoading] = useState(true);
 	const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 	const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
 	const [offers, setOffers] = useState([]);
@@ -28,18 +31,35 @@ function Offers() {
 	const [selectedDiscountType, setSelectedDiscountType] = useState(null);
 	const [totalPages, setTotalPages] = useState(1);
 	const [totalCount, setTotalCount] = useState(0);
-
 	const [searchParams, setSearchParams] = useSearchParams();
-
-	const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
 	const { showToast } = useToast();
 
 	const page = Number(searchParams.get("page")) || 1;
 	const limit = Number(searchParams.get("limit")) || 10;
 	const searchQuery = searchParams.get("search") || "";
 
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+		reset,
+		setValue,
+		watch
+	} = useForm({
+		defaultValues: { search: searchQuery || "" }
+	});
+
 	const handleOfferDialog = () => setIsOfferDialogOpen((prevOpen) => !prevOpen);
 	const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
+
+	const handleRowsPerPageChange = (event) => {
+		const newLimit = parseInt(event.target.value, 10);
+		setSearchParams((prev) => {
+			prev.set("limit", newLimit);
+			prev.set("page", 1);  // Reset to first page
+			return prev;
+		});
+	};
 
 	const setDefaultData = () => {
 		setValue("offerName", selectedOffer?.name);
@@ -47,14 +67,13 @@ function Offers() {
 		setSelectedDiscountType(selectedOffer?.discountType);
 		setValue("discountValue", selectedOffer?.discountValue);
 		const startDate = moment(selectedOffer?.startDate).format("YYYY-MM-DD");
-		console.log("🚀 ~ setDefaultData ~ startDate:", startDate)
 		const endDate = moment(selectedOffer?.endDate).format("YYYY-MM-DD")
-		console.log("🚀 ~ setDefaultData ~ endDate:", endDate)
 		setValue("startDate", startDate);
 		setValue("endDate", endDate);
 	};
 
 	const createOffer = async (formData) => {
+		setIsLoading(true);
 		const obj = {
 			isActive: formData.isActive,
 			name: formData.offerName,
@@ -74,11 +93,13 @@ function Offers() {
 		} catch (error) {
 			showToast(error, "error");
 		} finally {
-			getOffers();
-		}
+			setIsLoading(false);
+			getOffers(searchQuery, page, limit);
+		};
 	};
 
 	const updateOffer = async (formData) => {
+		setIsLoading(true);
 		const obj = {
 			isActive: formData.isActive,
 			name: formData.offerName,
@@ -97,11 +118,12 @@ function Offers() {
 		} catch (error) {
 			showToast(error, "error");
 		} finally {
-			getOffers();
-		}
+			setIsLoading(false);
+			getOffers(searchQuery, page, limit);
+		};
 	};
 
-	const getOffers = async (value, pageNumber) => {
+	const getOffers = async (value, pageNumber, limit) => {
 		try {
 			const params = { search: value, page: pageNumber, limit: limit };
 			const result = await OfferServices.getOffers(params);
@@ -114,10 +136,13 @@ function Offers() {
 			};
 		} catch (error) {
 			showToast(error, "error")
+		} finally {
+			setIsDataLoading(false);
 		};
 	};
 
 	const deleteOffer = async () => {
+		setIsLoading(true);
 		try {
 			const result = await OfferServices.deleteOffer(selectedOffer?._id);
 			if (result.status) {
@@ -127,8 +152,9 @@ function Offers() {
 		} catch (error) {
 			showToast(error, "error")
 		} finally {
+			setIsLoading(false);
 			getOffers();
-		}
+		};
 	};
 
 	const handleStatus = async (item) => {
@@ -154,10 +180,6 @@ function Offers() {
 	const debouncedSearch = useDebounce(searchValue, 500);
 
 	useEffect(() => {
-		getOffers(debouncedSearch, page);
-	}, [debouncedSearch, page]);
-
-	useEffect(() => {
 		if (selectedOffer != null) {
 			setDefaultData();
 		} else {
@@ -165,20 +187,15 @@ function Offers() {
 		};
 	}, [selectedOffer]);
 
-	const debouncedInput = useDebounce(searchValue, 500);
-
 	useEffect(() => {
 		setSearchParams((prev) => {
 			prev.set("page", 1);
 			prev.set("limit", limit);
-			prev.set("search", debouncedInput || "");
+			prev.set("search", debouncedSearch || "");
 			return prev;
 		});
-	}, [debouncedInput]);
-
-	useEffect(() => {
-		setValue("search", searchQuery);
-	}, []);
+		getOffers(debouncedSearch, page, limit);
+	}, [debouncedSearch, page, limit]);
 
 	return (
 		<Fragment>
@@ -326,7 +343,7 @@ function Offers() {
 							<SecondaryButton title={"Cancel"} fullWidth onClick={handleOfferDialog} />
 						</Grid>
 						<Grid item md={6}>
-							<PrimaryButton title={"Submit"} fullWidth type={"submit"} />
+							<PrimaryButton title={"Submit"} fullWidth type={"submit"} isLoading={isLoading} isDisabled={isLoading} />
 						</Grid>
 					</Grid>
 				</Grid>
@@ -354,7 +371,7 @@ function Offers() {
 					<SecondaryButton fullWidth title={"Cancel"} onClick={handleConfirmationDialog} />
 				</Grid>
 				<Grid item md={6}>
-					<PrimaryButton fullWidth title={"Delete"} onClick={deleteOffer} />
+					<PrimaryButton fullWidth title={"Delete"} onClick={deleteOffer} isLoading={isLoading} isDisabled={isLoading} />
 				</Grid>
 			</Dialog>
 			<Box
@@ -375,7 +392,6 @@ function Offers() {
 									placeholder={"Search here..."}
 									size={"small"}
 									fullWidth={true}
-									value={watch("search")}
 									register={register("search")}
 									InputProps={{
 										startAdornment: (
@@ -415,12 +431,18 @@ function Offers() {
 								<TableHead>
 									<TableRow>
 										{tableHead.map((ind) => (
-											<TableCell key={ind}>{ind}</TableCell>
+											<TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
 										))}
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{offers.map((item, ind) => (
+									{isDataLoading ? (
+										<TableRow>
+											<TableCell colSpan={10}>
+												<Loader />
+											</TableCell>
+										</TableRow>
+									) : offers.length > 0 ? offers.map((item, ind) => (
 										<TableRow key={ind}>
 											<TableCell>{ind + 1}</TableCell>
 											<TableCell>{item.name}</TableCell>
@@ -450,10 +472,12 @@ function Offers() {
 													sx={{
 														display: "flex",
 														alignItems: "center",
+														justifyContent: "center",
 														gap: 1
 													}}
 												>
 													<IconButton
+														type={"edit"}
 														onClick={() => {
 															setSelectedOffer(item);
 															handleOfferDialog();
@@ -462,6 +486,7 @@ function Offers() {
 														<Edit />
 													</IconButton>
 													<IconButton
+														type={"delete"}
 														onClick={() => {
 															setSelectedOffer(item);
 															handleConfirmationDialog();
@@ -472,7 +497,13 @@ function Offers() {
 												</Box>
 											</TableCell>
 										</TableRow>
-									))}
+									)) : (
+										<TableRow>
+											<TableCell colSpan={10}>
+												No data available
+											</TableCell>
+										</TableRow>
+									)}
 								</TableBody>
 							</Table>
 						</TableContainer>
@@ -501,6 +532,8 @@ function Offers() {
 											return prev;
 										});
 									}}
+									rowsPerPage={limit}
+									onRowsPerPageChange={handleRowsPerPageChange}
 								/>
 							</Grid>
 						</Grid>
