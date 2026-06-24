@@ -14,6 +14,7 @@ import {
   Typography,
   Divider,
   Button,
+  CardMedia,
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import moment from 'moment';
@@ -100,13 +101,14 @@ function OrderDetail() {
         <Box
           sx={{
             height: "calc(100vh - 173px)",
-            overflowY: 'auto'
+            overflowY: 'auto',
+            p: 1
           }}
         >
           <Grid container spacing={3}>
             {/* Left Column: Customer & Address */}
             <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, height: '100%' }}>
+              <Paper sx={{ p: 3, height: '100%' }} elevation={4}>
                 <Typography variant="h6" gutterBottom>
                   Customer Details
                 </Typography>
@@ -154,7 +156,7 @@ function OrderDetail() {
 
             {/* Right Column: Summary */}
             <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, height: '100%' }}>
+              <Paper sx={{ p: 3, height: '100%' }} elevation={4}>
                 <Typography variant="h6" gutterBottom>
                   Order Summary
                 </Typography>
@@ -195,7 +197,7 @@ function OrderDetail() {
 
             {/* Items Table */}
             <Grid item xs={12}>
-              <Paper sx={{ p: 3 }}>
+              <Paper sx={{ p: 3 }} elevation={4}>
                 <Typography variant="h6" gutterBottom>
                   Order Items
                 </Typography>
@@ -205,6 +207,7 @@ function OrderDetail() {
                     <TableHead>
                       <TableRow>
                         <TableCell>#</TableCell>
+                        <TableCell>Image</TableCell>
                         <TableCell>Product</TableCell>
                         <TableCell align="right">Quantity</TableCell>
                         <TableCell align="right">Price (each)</TableCell>
@@ -215,6 +218,18 @@ function OrderDetail() {
                       {order.items.map((item, index) => (
                         <TableRow key={item._id}>
                           <TableCell>{index + 1}</TableCell>
+                          <TableCell>
+                            <CardMedia
+                              component={"img"}
+                              src={item.product ? item.product.image : ''}
+                              alt={item.product ? item.product.name : ''}
+                              sx={{
+                                width: "60px",
+                                height: "60px",
+                                objectFit: "contain"
+                              }}
+                            />
+                          </TableCell>
                           <TableCell>
                             {item.product ? item.product.name : 'Product deleted'}
                           </TableCell>

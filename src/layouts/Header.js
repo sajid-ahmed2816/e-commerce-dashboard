@@ -10,7 +10,8 @@ import {
   Avatar,
   Divider,
   IconButton,
-  Badge
+  Badge,
+  Grid
 } from "@mui/material";
 import { LockReset, Logout, Notifications, Person } from "@mui/icons-material";
 import { io } from "socket.io-client";
@@ -22,11 +23,219 @@ import NotificationServices from "../api/Notification/NotificationServices";
 import colors from "../assets/styles/colors";
 import useAuth from "../hooks/useAuth";
 import moment from "moment";
+import Dialog from "../components/Dialog";
+import PrimaryButton, { SecondaryButton } from "../components/Button";
+import AuthServices from "../api/auth/AuthServices";
+import { useForm } from 'react-hook-form';
+import Loader from "../components/Loader";
+import InputField from "../components/InputField";
+
+const ChangePasswordDialog = ({ open, handleClose }) => {
+  const { showToast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [oldPasswordError, setOldPasswordError] = useState("");
+  const [oldPasswordValid, setOldPasswordValid] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const oldPasswordValue = watch("oldPassword");
+  const newPasswordValue = watch("newPassword");
+  const confirmPasswordValue = watch("confirmPassword");
+
+  // Debounce old password validation
+  useEffect(() => {
+    if (!oldPasswordValue || oldPasswordValue.length < 6) {
+      setOldPasswordError("");
+      setOldPasswordValid(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsChecking(true);
+      const obj = { oldPassword: oldPasswordValue }
+      try {
+        const result = await AuthServices.validatePassword(obj);
+        if (result.status && result.data.valid) {
+          setOldPasswordError("");
+          setOldPasswordValid(true);
+          clearErrors("oldPassword");
+        } else {
+          setOldPasswordError("Old password is incorrect");
+          setOldPasswordValid(false);
+          setError("oldPassword", { type: "manual", message: "Old password is incorrect" });
+        }
+      } catch (err) {
+        setOldPasswordError("Validation failed");
+        setOldPasswordValid(false);
+      } finally {
+        setIsChecking(false);
+      }
+    }, 500); // debounce delay
+
+    return () => clearTimeout(timer);
+  }, [oldPasswordValue, setError, clearErrors]);
+
+  // Confirm password validation (frontend only)
+  const validateConfirmPassword = (value) => {
+    console.log("🚀 ~ validateConfirmPassword ~ value:", value)
+    if (value !== newPasswordValue) {
+      return "Passwords do not match";
+    }
+    return true;
+  };
+
+  // New password strength (optional)
+  const validateNewPassword = (value) => {
+    console.log("🚀 ~ validateNewPassword ~ value:", value)
+    if (value.length < 8) {
+      return "Password must be at least 8 characters";
+    }
+    // Optional: add regex for complexity
+    // if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+    //   return "Password must contain uppercase, lowercase and number";
+    // }
+    return true;
+  };
+
+  const onSubmit = async (data) => {
+    if (!oldPasswordValid) {
+      showToast("Please enter a valid old password", "error");
+      return;
+    }
+    const obj = { oldPassword: data.oldPassword, newPassword: data.newPassword }
+    setIsLoading(true);
+    try {
+      const result = await AuthServices.changePassword(obj);
+      if (result.status) {
+        showToast(result.message, "success");
+        reset();
+        handleClose();
+      } else {
+        showToast(result.message, "error");
+        // If backend says old password wrong, reset validation
+        if (result.message.toLowerCase().includes("old password")) {
+          setOldPasswordError("Old password is incorrect");
+          setOldPasswordValid(false);
+          setError("oldPassword", { type: "manual", message: "Old password is incorrect" });
+        }
+      }
+    } catch (err) {
+      showToast(err.message || "Something went wrong", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isFormValid = () => {
+    return (
+      oldPasswordValid &&
+      !errors.oldPassword &&
+      !errors.newPassword &&
+      !errors.confirmPassword &&
+      newPasswordValue &&
+      confirmPasswordValue &&
+      newPasswordValue === confirmPasswordValue
+    );
+  };
+
+  return (
+    <Dialog
+      open={open}
+      handleClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      component={"form"}
+      onSubmit={handleSubmit(onSubmit)}
+      title={"Change Password"}
+    >
+      <Grid item xs={12}>
+        <InputField
+          label="Old Password"
+          type="password"
+          fullWidth
+          value={watch("oldPassword")}
+          register={register("oldPassword", {
+            required: "Old password is required",
+            minLength: {
+              value: 6,
+              message: "Password must be at least 6 characters",
+            },
+          })}
+          error={!!errors.oldPassword || !!oldPasswordError}
+          helperText={errors.oldPassword?.message || oldPasswordError || (isChecking ? "Checking..." : "")}
+          InputProps={{
+            endAdornment: isChecking && <Loader />,
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <InputField
+          label="New Password"
+          type="password"
+          fullWidth
+          value={watch("newPassword")}
+          register={register("newPassword", {
+            required: "New password is required",
+            validate: validateNewPassword,
+          })}
+          error={!!errors.newPassword}
+          helperText={errors.newPassword?.message}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <InputField
+          label="Confirm New Password"
+          type="password"
+          fullWidth
+          value={watch("confirmPassword")}
+          register={register("confirmPassword", {
+            required: "Confirm password is required",
+            validate: validateConfirmPassword,
+          })}
+          error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword?.message}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <SecondaryButton title={"Cancel"} onClick={handleClose} fullWidth />
+          </Grid>
+          <Grid item xs={6}>
+            <PrimaryButton
+              type="submit"
+              title={isLoading ? <Loader /> : "Update Password"}
+              disabled={!isFormValid() || isSubmitting || isLoading}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+      </Grid>
+    </Dialog>
+  );
+};
 
 export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationEl, setNotificationEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialog] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const socketRef = useRef(null);
   const navigate = useNavigate();
@@ -82,6 +291,10 @@ export default function Header() {
   const handleNotificationMenuClose = () => {
     setNotificationEl(null);
   };
+
+  const handleChangePasswordDialog = () => {
+    setIsChangePasswordDialog(prev => !prev);
+  }
 
   const getNotificationsAndCount = async () => {
     try {
@@ -155,6 +368,10 @@ export default function Header() {
 
   return (
     <Fragment>
+      <ChangePasswordDialog
+        open={isChangePasswordDialogOpen}
+        handleClose={handleChangePasswordDialog}
+      />
       <Menu
         anchorEl={anchorEl}
         id="account-menu"
@@ -180,7 +397,10 @@ export default function Header() {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem onClick={handleClose}>
+        <MenuItem onClick={() => {
+          handleClose();
+          handleChangePasswordDialog();
+        }}>
           <Box
             sx={{
               display: "flex",
