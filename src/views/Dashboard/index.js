@@ -15,7 +15,6 @@ function Dashboard() {
       const result = await DashboardServices.getStats();
       if (result.status) {
         setData(result?.data);
-        console.log("🚀 ~ getStats ~ result?.data:", result?.data)
       }
     } catch (error) {
       showToast(error, "error");

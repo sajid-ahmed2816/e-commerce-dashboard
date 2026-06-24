@@ -10,6 +10,7 @@ import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import Loader from '../../../components/Loader';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Editor from '../../../components/Editor';
+import moment from 'moment';
 
 function UpdateBlog() {
     const [image, setImage] = useState("");
@@ -46,7 +47,7 @@ function UpdateBlog() {
         setIsLoading(true);
         const obj = {
             title: formData.title,
-            slug: formData.slug,
+            date: formData.date,
             content: getValues("content"),
             thumbnail: image,
             status: "draft"
@@ -70,8 +71,10 @@ function UpdateBlog() {
     };
 
     const setDefaultData = () => {
+        const date = moment(state.date).format("YYYY-MM-DD")
+        console.log("🚀 ~ setDefaultData ~ date:", date)
         setValue("title", state?.title);
-        setValue("slug", state?.slug);
+        setValue("date", date);
         setValue("content", state?.content);
         setImage(state?.thumbnail);
         setValue("status", state?.status);
@@ -114,7 +117,7 @@ function UpdateBlog() {
                     <Grid item md={12}>
                         <Box
                             sx={{
-                                height: "120px",
+                                height: "300px",
                                 border: "1px solid #b5b5b5",
                                 borderRadius: "4px",
                                 position: "relative",
@@ -140,7 +143,7 @@ function UpdateBlog() {
                                         htmlFor='uploadImage'
                                         style={{
                                             width: "100%",
-                                            height: "120px",
+                                            height: "300px",
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
@@ -154,9 +157,9 @@ function UpdateBlog() {
                                                     src={image}
                                                     sx={{
                                                         width: "100%",
-                                                        height: "120px",
+                                                        height: "300px",
                                                         borderRadius: "4px",
-                                                        objectFit: "cover"
+                                                        objectFit: "contain"
                                                     }}
                                                 />
                                                 <Box
@@ -221,15 +224,14 @@ function UpdateBlog() {
                         <Box>
                             <InputField
                                 variant={"outlined"}
-                                label={"Slug"}
                                 fullWidth={true}
-                                type={"text"}
-                                value={watch("slug")}
-                                register={register("slug", {
-                                    required: "Enter Blog Slug",
+                                type={"date"}
+                                value={watch("date")}
+                                register={register("date", {
+                                    required: "Enter Blog Date",
                                 })}
-                                error={errors?.slug && true}
-                                helperText={errors?.slug?.message}
+                                error={errors?.date && true}
+                                helperText={errors?.date?.message}
                             />
                         </Box>
                     </Grid>

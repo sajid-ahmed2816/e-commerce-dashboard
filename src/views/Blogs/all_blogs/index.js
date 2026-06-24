@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Grid, InputAdornment, Typography, colors } from '@mui/material';
-import { ErrorOutline, Search } from '@mui/icons-material';
+import { Box, CardMedia, Grid, IconButton, InputAdornment, Typography, colors } from '@mui/material';
+import { AccessTime, Delete, ErrorOutline, Label, Search } from '@mui/icons-material';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
 import Dialog from '../../../components/Dialog';
 import InputField from '../../../components/InputField';
@@ -11,6 +11,8 @@ import useDebounce from '../../../utils/Debounce';
 import { useForm } from 'react-hook-form';
 import Card from '../../../components/Card';
 import Loader from '../../../components/Loader';
+import { Switch } from '../../../components/Switch';
+import moment from 'moment';
 
 function Blogs() {
   const [isLoading, setIsLoading] = useState(false);
@@ -231,21 +233,121 @@ function Blogs() {
                     <Grid container spacing={2}>
                       {blogs.map((item, ind) => (
                         <Grid item md={4} key={ind}>
-                          <Card
-                            data={item}
-                            primaryOnClick={(blog) => {
-                              setSelectedBlog(blog);
-                              navigate(`/blogs/update-blog/${blog._id}`, {
-                                state: blog
-                              });
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "stretch",
+                              boxShadow: "0px 0px 5px 2px #E6E6E6",
+                              borderRadius: 2
                             }}
-                            secondaryOnClick={(blog) => {
-                              setSelectedBlog(blog);
-                              handleConfirmationDialog();
-                            }}
-                            onChange={(blog) => handleStatus(blog)}
-                            activeIds={activeIds}
-                          />
+                          >
+                            <CardMedia
+                              component={"img"}
+                              src={item?.image}
+                              sx={{
+                                width: "100%",
+                                height: "240px",
+                                objectFit: "cover",
+                                borderRadius: "8px 8px 0 0"
+                              }}
+                            />
+                            <Box sx={{ p: 2 }}>
+                              <Grid
+                                container
+                                spacing={1}
+                                alignItems={"center"}
+                              >
+                                <Grid item md={12}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Label sx={{ fontSize: 20 }} />
+                                    <Typography
+                                      variant={"body2"}
+                                      sx={{
+                                        whiteSpace: "nowrap",
+                                        textOverflow: "ellipsis",
+                                        overflow: "hidden",
+                                        width: "100%"
+                                      }}
+                                    >
+                                      {item?.tagline}
+                                    </Typography>
+                                  </Box>
+                                </Grid>
+                                <Grid item md={6}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <AccessTime sx={{ fontSize: 20 }} />
+                                    <Typography variant={"caption"} sx={{ lineHeight: 1.5 }}>
+                                      {moment(item.date).format("DD-MMM-YYYY")}
+                                    </Typography>
+                                  </Box>
+                                </Grid>
+                                <Grid item md={6}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      justifyContent: "flex-end",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <Switch
+                                      checked={activeIds.includes(item._id)}
+                                      onChange={() => handleStatus(item)}
+                                    />
+                                  </Box>
+                                </Grid>
+                                <Grid item md={12}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1
+                                    }}
+                                  >
+                                    <PrimaryButton
+                                      title={"Edit"}
+                                      fullWidth={true}
+                                      onClick={() => {
+                                        navigate(`/blogs/update-blog/${item._id}`, { state: item })
+                                      }}
+                                    />
+                                    <IconButton
+                                      sx={{
+                                        background: colors.red.A700,
+                                        width: 36.5,
+                                        height: 36.5,
+                                        border: "1px solid transparent",
+                                        ":hover": {
+                                          border: `1px solid ${colors.red.A700}`,
+                                          svg: {
+                                            color: colors.red.A700,
+                                          }
+                                        }
+                                      }}
+                                      onClick={() => {
+                                        setSelectedBlog(item);
+                                        handleConfirmationDialog();
+                                      }}
+                                    >
+                                      <Delete sx={{ color: colors.common.white }} />
+                                    </IconButton>
+                                  </Box>
+                                </Grid>
+                              </Grid>
+                            </Box>
+                          </Box>
                         </Grid>
                       ))}
                       {isLoadingMore && (

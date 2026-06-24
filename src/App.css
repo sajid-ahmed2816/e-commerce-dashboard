@@ -2,7 +2,7 @@
   --ck-border-radius: 4px;
   --ck-color-base-border: #B5B5B5;
   --ck-color-focus-border: #282B29;
-  --ck-font-face: "Comfortaa"
+  --ck-font-face: "Comfortaa";
 }
 
 .ck-body-wrapper>* .ck.ck-balloon-panel {
@@ -11,7 +11,8 @@
 
 .ck.ck-editor__main>.ck-editor__editable:not(.ck-focused),
 .ck.ck-editor__main>.ck-editor__editable {
-  height: 207px;
+  height: 299px;
+  font-family: "Comfortaa";
 }
 
 * {

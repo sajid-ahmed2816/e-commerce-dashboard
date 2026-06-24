@@ -43,7 +43,7 @@ function CreateBlog() {
         setIsLoading(true);
         const obj = {
             title: formData.title,
-            slug: formData.slug,
+            date: formData.date,
             content: getValues("content"),
             thumbnail: image,
             status: "draft"
@@ -100,7 +100,7 @@ function CreateBlog() {
                     <Grid item md={12}>
                         <Box
                             sx={{
-                                height: "120px",
+                                height: "300px",
                                 border: "1px solid #b5b5b5",
                                 borderRadius: "4px",
                                 position: "relative",
@@ -126,7 +126,7 @@ function CreateBlog() {
                                         htmlFor='uploadImage'
                                         style={{
                                             width: "100%",
-                                            height: "120px",
+                                            height: "300px",
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
@@ -140,9 +140,9 @@ function CreateBlog() {
                                                     src={image}
                                                     sx={{
                                                         width: "100%",
-                                                        height: "120px",
+                                                        height: "300px",
                                                         borderRadius: "4px",
-                                                        objectFit: "cover"
+                                                        objectFit: "contain"
                                                     }}
                                                 />
                                                 <Box
@@ -207,15 +207,14 @@ function CreateBlog() {
                         <Box>
                             <InputField
                                 variant={"outlined"}
-                                label={"Slug"}
                                 fullWidth={true}
-                                type={"text"}
-                                value={watch("slug")}
-                                register={register("slug", {
-                                    required: "Enter Blog Slug",
+                                type={"date"}
+                                value={watch("date")}
+                                register={register("date", {
+                                    required: "Enter Blog Date",
                                 })}
-                                error={errors?.slug && true}
-                                helperText={errors?.slug?.message}
+                                error={errors?.date && true}
+                                helperText={errors?.date?.message}
                             />
                         </Box>
                     </Grid>

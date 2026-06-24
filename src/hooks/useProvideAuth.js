@@ -21,7 +21,7 @@ function useProvideAuth() {
     setRole(data.role);
   };
 
-  const userLogout = async () => {
+  const userLogout = () => {
     setToken(null);
     setName(null);
     setPicture(null);

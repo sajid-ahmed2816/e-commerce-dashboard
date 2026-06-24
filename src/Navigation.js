@@ -44,7 +44,8 @@ const Navigation = [
   {
     label: "Orders",
     icon: <Sell sx={styles.iconSize} />,
-    routes: ["/orders"],
+    routes: ["/orders", "/orders/order-detail/:id"],
+    routesLabel: ["Orders", "Order Details"]
   },
   {
     label: "Users",

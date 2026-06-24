@@ -16,7 +16,7 @@ import moment from 'moment';
 import TableHead from '../../components/TableHead';
 import Loader from '../../components/Loader';
 
-const tableHead = ["Order#", "Customer Name", "Mobile No", "Total", "Country", "State", "City", "Created At", "Actions"];
+const tableHead = ["Order#", "Customer Name", "Mobile No", "Total", "Payment Method", "Country", "State", "City", "Created At", "Actions"];
 
 function Orders() {
   const [isLoading, setIsLoading] = useState("");
@@ -29,7 +29,6 @@ function Orders() {
   const [totalCount, setTotalCount] = useState(0);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -135,7 +134,7 @@ function Orders() {
 
   useEffect(() => {
     setSearchParams((prev) => {
-      prev.set("page", 1);
+      prev.set("page", page);
       prev.set("limit", limit);
       prev.set("search", debouncedSearch || "");
       return prev;
@@ -306,6 +305,7 @@ function Orders() {
                       <TableCell>{item?.customerName}</TableCell>
                       <TableCell>{item?.mobile}</TableCell>
                       <TableCell>{item?.total}</TableCell>
+                      <TableCell>{item?.paymentMethod === "cod" ? "Cash on Delivery" : item?.paymentMethod === "online" ? "Online Paid" : ""}</TableCell>
                       <TableCell>{item?.country}</TableCell>
                       <TableCell>{item?.state}</TableCell>
                       <TableCell>{item?.city}</TableCell>

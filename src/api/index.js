@@ -31,6 +31,16 @@ export const patch = async (endPoint, data) => {
   }
 }
 
+export const put = async (endPoint, data) => {
+  try {
+    const result = await Axios.put(endPoint, data);
+    if (result.status == 200) return result.data;
+    else throw result;
+  } catch (error) {
+    throw ErrorHandler(error);
+  }
+}
+
 export const deleted = async (endPoint) => {
   try {
     const result = await Axios.delete(endPoint);
