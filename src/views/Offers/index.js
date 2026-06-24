@@ -17,8 +17,9 @@ import { Switch } from '../../components/Switch';
 import TableHead from '../../components/TableHead';
 import SelectField from '../../components/SelectField';
 import Loader from '../../components/Loader';
+import CategoryServices from '../../api/categories/CategoryServices';
 
-const tableHead = ["S.No", "Name", "Color", "Discount Type", "Discount Value", "Start Date", "End Date", "Status", "Created At", "Actions"];
+const tableHead = ["S.No", "Name", "Category", "Color", "Discount Type", "Discount Value", "Start Date", "End Date", "Status", "Actions"];
 
 function Offers() {
 	const [isLoading, setIsLoading] = useState("");
@@ -29,6 +30,8 @@ function Offers() {
 	const [activeIds, setActiveIds] = useState([]);
 	const [selectedOffer, setSelectedOffer] = useState(null);
 	const [selectedDiscountType, setSelectedDiscountType] = useState(null);
+	const [categories, setCategories] = useState([]);
+	const [selectedCategory, setSelectedCategory] = useState("");
 	const [totalPages, setTotalPages] = useState(1);
 	const [totalCount, setTotalCount] = useState(0);
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -70,6 +73,20 @@ function Offers() {
 		const endDate = moment(selectedOffer?.endDate).format("YYYY-MM-DD")
 		setValue("startDate", startDate);
 		setValue("endDate", endDate);
+		setSelectedCategory(selectedOffer?.category?._id);
+		setValue("category", selectedOffer?.category?._id);
+	};
+
+	const getCategories = async () => {
+		try {
+			const result = await CategoryServices.getCategories();
+			if (result.status) {
+				const renamed = result.data.categories.map((item) => ({ name: item.name, value: item._id }));
+				setCategories(renamed);
+			}
+		} catch (error) {
+			showToast(error, "error");
+		};
 	};
 
 	const createOffer = async (formData) => {
@@ -80,8 +97,9 @@ function Offers() {
 			color: formData.color,
 			discountType: selectedDiscountType,
 			discountValue: Number(formData.discountValue),
-			startDate: new Date(formData.startDate),
-			endDate: new Date(formData.endDate),
+			startDate: formData.startDate,
+			endDate: formData.endDate,
+			category: formData.category
 		};
 		try {
 			const result = await OfferServices.createOffer(obj);
@@ -106,8 +124,9 @@ function Offers() {
 			color: formData.color,
 			discountType: selectedDiscountType,
 			discountValue: Number(formData.discountValue),
-			startDate: new Date(formData.startDate),
-			endDate: new Date(formData.endDate),
+			startDate: formData.startDate,
+			endDate: formData.endDate,
+			category: formData.category
 		};
 		try {
 			const result = await OfferServices.updateOffer(selectedOffer?._id, obj);
@@ -180,6 +199,10 @@ function Offers() {
 	const debouncedSearch = useDebounce(searchValue, 500);
 
 	useEffect(() => {
+		getCategories();
+	}, []);
+
+	useEffect(() => {
 		if (selectedOffer != null) {
 			setDefaultData();
 		} else {
@@ -207,7 +230,7 @@ function Offers() {
 				onSubmit={handleSubmit(selectedOffer == null ? createOffer : updateOffer)}
 				maxWidth={"sm"}
 			>
-				<Grid item md={8}>
+				<Grid item md={12}>
 					<Box>
 						<InputField
 							variant={"outlined"}
@@ -220,6 +243,22 @@ function Offers() {
 							})}
 							error={errors?.offerName && true}
 							helperText={errors?.offerName?.message}
+						/>
+					</Box>
+				</Grid>
+				<Grid item md={8}>
+					<Box>
+						<SelectField
+							label={"Category"}
+							fullWidth={true}
+							value={selectedCategory}
+							register={register("category", {
+								required: "Select a Category",
+								onChange: (e) => setSelectedCategory(e.target.value),
+							})}
+							error={errors?.category && true}
+							helperText={errors?.category?.message}
+							options={categories}
 						/>
 					</Box>
 				</Grid>
@@ -446,6 +485,7 @@ function Offers() {
 										<TableRow key={ind}>
 											<TableCell>{ind + 1}</TableCell>
 											<TableCell>{item.name}</TableCell>
+											<TableCell>{item?.category?.name}</TableCell>
 											<TableCell>
 												<Box
 													sx={{
@@ -460,7 +500,6 @@ function Offers() {
 											<TableCell>{item.discountValue}</TableCell>
 											<TableCell>{moment(item?.startDate).format("DD-MM-YYYY")}</TableCell>
 											<TableCell>{moment(item?.endDate).format("DD-MM-YYYY")}</TableCell>
-											<TableCell>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
 											<TableCell>
 												<Switch
 													checked={activeIds.includes(item._id)}
@@ -499,7 +538,7 @@ function Offers() {
 										</TableRow>
 									)) : (
 										<TableRow>
-											<TableCell colSpan={10}>
+											<TableCell colSpan={10} sx={{ textAlign: "center" }}>
 												No data available
 											</TableCell>
 										</TableRow>
