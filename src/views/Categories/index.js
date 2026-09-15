@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Chip, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, CardMedia, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
@@ -17,6 +17,7 @@ import moment from 'moment';
 import Loader from '../../components/Loader';
 import { Switch } from '../../components/Switch';
 import TableHead from '../../components/TableHead';
+import SelectField from '../../components/SelectField';
 
 const tableHead = ["S.No", "Image", "Name", "Type", "Popular", "Status", "Created At", "Actions"];
 
@@ -25,6 +26,8 @@ function Categories() {
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCULoading, setIsCUDLoading] = useState(false);
+  const [parentCategories, setParentCategories] = useState([]);
+  const [selectedParentCategory, setSelectedParentCategory] = useState("");
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [activeIds, setActiveIds] = useState([]);
@@ -66,6 +69,7 @@ function Categories() {
   const setDefaultData = () => {
     setValue("categoryName", selectedCategory?.name);
     setValue("type", selectedCategory?.type);
+    setSelectedParentCategory(selectedCategory?.parent?._id || "");
     setImage(selectedCategory?.image);
     setValue("isPopular", selectedCategory?.isPopular);
   };
@@ -94,6 +98,7 @@ function Categories() {
     const obj = {
       name: formData.categoryName,
       type: formData.type,
+      parent: formData.parent || null,
       image: image,
       isPopular: isPopular
     };
@@ -104,6 +109,7 @@ function Categories() {
         reset();
         setImage("");
         setValue("isPopular", false);
+        setSelectedParentCategory("");
         handleCategoryDialog();
       }
     } catch (error) {
@@ -120,6 +126,7 @@ function Categories() {
     const obj = {
       name: formData.categoryName,
       type: formData.type,
+      parent: formData.parent || null,
       image: image,
       isPopular: isPopular
     };
@@ -153,6 +160,28 @@ function Categories() {
     } finally {
       setIsDataLoading(false);
     };
+  };
+
+  const getParentCategories = async () => {
+    try {
+      const params = {
+        page: 1,
+        limit: "all"
+      };
+
+      const result = await CategoryServices.getCategories(params);
+
+      if (result.status) {
+        const parents = result.data.categories.filter(
+          (category) => category.parent === null
+        );
+
+        const renamed = parents.map((item) => ({ name: item.name, value: item._id }));
+        setParentCategories(renamed);
+      }
+    } catch (error) {
+      showToast(error, "error");
+    }
   };
 
   const deleteCategory = async () => {
@@ -212,9 +241,14 @@ function Categories() {
     getCategories(debouncedSearch, page, limit);
   }, [debouncedSearch, page, limit]);
 
+  useEffect(() => {
+    getParentCategories();
+  }, []);
+
   return (
     <Fragment>
       <Dialog
+        maxWidth={"md"}
         open={isCategoryDialogOpen}
         handleClose={handleCategoryDialog}
         title={selectedCategory == null ? "Create Category" : "Update Category"}
@@ -252,13 +286,13 @@ function Categories() {
                       htmlFor='uploadImage'
                       style={{
                         width: "100%",
-                        height: "168px",
+                        height: "100%",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      {image != "" ? (
+                      {image !== "" ? (
                         <Fragment>
                           <CardMedia
                             component={"img"}
@@ -330,6 +364,22 @@ function Categories() {
                   </Box>
                 </Grid>
                 <Grid item md={12}>
+                  <SelectField
+                    label={"Parent Category"}
+                    fullWidth={true}
+                    value={selectedParentCategory}
+                    register={register("parent", {
+                      required: "Select a Category",
+                      onChange: (e) => setSelectedParentCategory(e.target.value),
+                    })}
+                    error={errors?.parent && true}
+                    helperText={errors?.parent?.message}
+                    options={parentCategories
+                      .filter((category) => category.value !== selectedCategory?._id)
+                    }
+                  />
+                </Grid>
+                <Grid item md={12}>
                   <Box>
                     <InputField
                       variant={"outlined"}
@@ -374,10 +424,20 @@ function Categories() {
         <Grid item md={12}>
           <Grid container spacing={2}>
             <Grid item md={6}>
-              <SecondaryButton title={"Cancel"} fullWidth onClick={handleCategoryDialog} />
+              <SecondaryButton
+                fullWidth
+                title={"Cancel"}
+                onClick={handleCategoryDialog}
+              />
             </Grid>
             <Grid item md={6}>
-              <PrimaryButton title={"Submit"} fullWidth type={"submit"} />
+              <PrimaryButton
+                fullWidth
+                type={"submit"}
+                title={"Submit"}
+                isLoading={isCULoading}
+                disabled={isLoading}
+              />
             </Grid>
           </Grid>
         </Grid>
@@ -405,7 +465,13 @@ function Categories() {
           <SecondaryButton fullWidth title={"Cancel"} onClick={handleConfirmationDialog} />
         </Grid>
         <Grid item md={6}>
-          <PrimaryButton fullWidth title={"Delete"} onClick={deleteCategory} />
+          <PrimaryButton
+            fullWidth
+            title={"Delete"}
+            onClick={deleteCategory}
+            isLoading={isCULoading}
+            disabled={isCULoading}
+          />
         </Grid>
       </Dialog>
       <Box
