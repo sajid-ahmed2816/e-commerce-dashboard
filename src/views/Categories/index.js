@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { Box, CardMedia, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
@@ -18,8 +18,10 @@ import Loader from '../../components/Loader';
 import { Switch } from '../../components/Switch';
 import TableHead from '../../components/TableHead';
 import SelectField from '../../components/SelectField';
+import MultiSelectField from '../../components/MultiSelectField';
+import AttributeServices from '../../api/attributes/AttributeServices';
 
-const tableHead = ["S.No", "Image", "Name", "Type", "Popular", "Status", "Created At", "Actions"];
+const tableHead = ["S.No", "Image", "Name", "Parent", "Type", "Popular", "Status", "Created At", "Actions"];
 
 function Categories() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -27,6 +29,7 @@ function Categories() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCULoading, setIsCUDLoading] = useState(false);
   const [parentCategories, setParentCategories] = useState([]);
+  const [attributes, setAttributes] = useState([]);
   const [selectedParentCategory, setSelectedParentCategory] = useState("");
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [categories, setCategories] = useState([]);
@@ -49,7 +52,8 @@ function Categories() {
     reset,
     setValue,
     getValues,
-    watch
+    watch,
+    control
   } = useForm({
     defaultValues: { search: searchQuery || "" }
   });
@@ -67,11 +71,14 @@ function Categories() {
   };
 
   const setDefaultData = () => {
+    const attIds = selectedCategory?.attributes?.map(att => att._id);
     setValue("categoryName", selectedCategory?.name);
     setValue("type", selectedCategory?.type);
+    setValue("parent", selectedCategory?.parent?._id || "");
     setSelectedParentCategory(selectedCategory?.parent?._id || "");
     setImage(selectedCategory?.image);
     setValue("isPopular", selectedCategory?.isPopular);
+    setValue("attributes", attIds);
   };
 
   const uploadImage = async (e) => {
@@ -100,7 +107,8 @@ function Categories() {
       type: formData.type,
       parent: formData.parent || null,
       image: image,
-      isPopular: isPopular
+      isPopular: isPopular,
+      attributes: formData.attributes || []
     };
     try {
       const result = await CategoryServices.createCategory(obj);
@@ -117,6 +125,7 @@ function Categories() {
     } finally {
       setIsCUDLoading(false);
       getCategories(searchQuery, page, limit);
+      getParentCategories();
     }
   };
 
@@ -128,7 +137,8 @@ function Categories() {
       type: formData.type,
       parent: formData.parent || null,
       image: image,
-      isPopular: isPopular
+      isPopular: isPopular,
+      attributes: formData.attributes || []
     };
     try {
       const result = await CategoryServices.updateCategory(selectedCategory?._id, obj);
@@ -141,6 +151,7 @@ function Categories() {
     } finally {
       setIsCUDLoading(false);
       getCategories(searchQuery, page, limit);
+      getParentCategories();
     }
   };
 
@@ -173,11 +184,29 @@ function Categories() {
 
       if (result.status) {
         const parents = result.data.categories.filter(
-          (category) => category.parent === null
+          (category) => category.parent == null
         );
 
         const renamed = parents.map((item) => ({ name: item.name, value: item._id }));
         setParentCategories(renamed);
+      }
+    } catch (error) {
+      showToast(error, "error");
+    }
+  };
+
+  const getAttributes = async () => {
+    try {
+      const params = {
+        page: 1,
+        limit: "all"
+      };
+
+      const result = await AttributeServices.getAttributes(params);
+
+      if (result.status) {
+        const renamed = result.data.attributes.map((item) => ({ name: item.name, value: item._id }));
+        setAttributes(renamed);
       }
     } catch (error) {
       showToast(error, "error");
@@ -243,6 +272,7 @@ function Categories() {
 
   useEffect(() => {
     getParentCategories();
+    getAttributes();
   }, []);
 
   return (
@@ -369,14 +399,28 @@ function Categories() {
                     fullWidth={true}
                     value={selectedParentCategory}
                     register={register("parent", {
-                      required: "Select a Category",
                       onChange: (e) => setSelectedParentCategory(e.target.value),
                     })}
-                    error={errors?.parent && true}
-                    helperText={errors?.parent?.message}
                     options={parentCategories
                       .filter((category) => category.value !== selectedCategory?._id)
                     }
+                  />
+                </Grid>
+                <Grid item md={12}>
+                  <Controller
+                    name={"attributes"}
+                    control={control}
+                    render={({ field }) => (
+                      <MultiSelectField
+                        label={"Attributes"}
+                        fullWidth={true}
+                        value={field?.value}
+                        onChange={field?.onChange}
+                        error={errors?.attributes && true}
+                        helperText={errors?.attributes?.message}
+                        options={attributes}
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid item md={12}>
@@ -387,11 +431,7 @@ function Categories() {
                       fullWidth={true}
                       type={"text"}
                       value={watch("type")}
-                      register={register("type", {
-                        required: "Enter a type"
-                      })}
-                      error={errors?.type && true}
-                      helperText={errors?.type?.message}
+                      register={register("type")}
                     />
                   </Box>
                 </Grid>
@@ -436,7 +476,7 @@ function Categories() {
                 type={"submit"}
                 title={"Submit"}
                 isLoading={isCULoading}
-                disabled={isLoading}
+                disabled={isCULoading}
               />
             </Grid>
           </Grid>
@@ -510,6 +550,8 @@ function Categories() {
                     title={"Create Category"}
                     onClick={() => {
                       setSelectedCategory(null);
+                      setSelectedParentCategory("");
+                      reset();
                       handleCategoryDialog();
                     }}
                   />
@@ -535,7 +577,7 @@ function Categories() {
                 <TableBody>
                   {isDataLoading ? (
                     <TableRow>
-                      <TableCell colSpan={8}>
+                      <TableCell colSpan={9}>
                         <Loader />
                       </TableCell>
                     </TableRow>
@@ -544,6 +586,7 @@ function Categories() {
                       <TableCell>{ind + 1}</TableCell>
                       <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
                       <TableCell>{item.name}</TableCell>
+                      <TableCell>{item?.parent?.name || "-"}</TableCell>
                       <TableCell>{item.type}</TableCell>
                       <TableCell><Chip label={item?.isPopular ? "Yes" : "No"} variant={"outlined"} color={item?.isPopular ? "success" : "error"} size={"small"} /></TableCell>
                       <TableCell>
@@ -585,7 +628,7 @@ function Categories() {
                     </TableRow>
                   )) : (
                     <TableRow>
-                      <TableCell colSpan={8}>
+                      <TableCell colSpan={9}>
                         No data available
                       </TableCell>
                     </TableRow>
