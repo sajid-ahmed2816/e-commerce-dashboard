@@ -1,11 +1,16 @@
 export const ErrorHandler = (error) => {
   if (error.response) {
-    if (error.response.status == 403) {
+    const status = error.response.status;
+    if (status === 403) {
       localStorage.clear();
-      window.location.href = "/login"
-      return error.response.data.message;
-    } else {
-      return error.response.data.message;
-    }
-  }
+      window.location.href = "/login";
+    };
+    return (
+      error.response.data?.message ||
+      error.response.data?.error ||
+      error.message ||
+      "Something went wrong"
+    );
+  };
+  return error.message;
 };

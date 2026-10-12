@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { Box, CardMedia, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
-import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
+import { ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import { Controller, useForm } from 'react-hook-form';
+import { Edit, Delete } from "../../assets/icons";
 import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
@@ -20,6 +21,7 @@ import TableHead from '../../components/TableHead';
 import SelectField from '../../components/SelectField';
 import MultiSelectField from '../../components/MultiSelectField';
 import AttributeServices from '../../api/attributes/AttributeServices';
+import NoPreview from '../../components/NoPreview';
 
 const tableHead = ["S.No", "Image", "Name", "Parent", "Type", "Popular", "Status", "Created At", "Actions"];
 
@@ -569,8 +571,16 @@ function Categories() {
               <Table size='small'>
                 <TableHead>
                   <TableRow>
-                    {tableHead.map((ind) => (
-                      <TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
+                    {tableHead.map((item, ind) => (
+                      <TableCell
+                        key={item}
+                        sx={{
+                          textAlign: item === "Actions" ? "center" : "left",
+                          borderRadius: ind === 0 ? "8px 0px 0px 0px" : ind === tableHead.length - 1 ? "0px 8px 0px 0px" : "0px"
+                        }}
+                      >
+                        {item}
+                      </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
@@ -584,10 +594,24 @@ function Categories() {
                   ) : categories.length > 0 ? categories.map((item, ind) => (
                     <TableRow key={ind}>
                       <TableCell>{ind + 1}</TableCell>
-                      <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "cover" }} /></TableCell>
+                      <TableCell>
+                        {item.image ? (
+                          <CardMedia
+                            src={item.image}
+                            component={"img"}
+                            sx={{
+                              width: "80px",
+                              height: "40px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <NoPreview />
+                        )}
+                      </TableCell>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item?.parent?.name || "-"}</TableCell>
-                      <TableCell>{item.type}</TableCell>
+                      <TableCell>{item.type || "-"}</TableCell>
                       <TableCell><Chip label={item?.isPopular ? "Yes" : "No"} variant={"outlined"} color={item?.isPopular ? "success" : "error"} size={"small"} /></TableCell>
                       <TableCell>
                         <Switch

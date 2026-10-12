@@ -41,9 +41,9 @@ export const put = async (endPoint, data) => {
   }
 }
 
-export const deleted = async (endPoint) => {
+export const deleted = async (endPoint, obj) => {
   try {
-    const result = await Axios.delete(endPoint);
+    const result = await Axios.delete(endPoint, { data: obj });
     if (result.status === 200) return result.data;
     else throw result;
   } catch (error) {

@@ -1,10 +1,10 @@
-import { Dashboard, Category, Workspaces, ViewCarousel, Groups, Article, Info, AccountCircle, Sell, LocalActivity, CandlestickChart } from "@mui/icons-material";
+import { Dashboard, Category, Workspaces, ViewCarousel, Groups, Article, Info, AccountCircle, Sell, LocalActivity, CandlestickChart, Tune, SwitchAccessShortcut } from "@mui/icons-material";
 import colors from "./assets/styles/colors";
 
 const styles = {
   iconSize: {
     p: 0.2,
-    fontSize: "22px",
+    fontSize: "20px",
     color: colors.secondary,
   },
 };
@@ -21,14 +21,14 @@ const Navigation = [
     routes: ["/banners"]
   },
   {
-    label: "Manage Sizes",
-    icon: <CandlestickChart sx={styles.iconSize} />,
-    routes: ["/sizes"]
-  },
-  {
     label: "Manage Offers",
     icon: <LocalActivity sx={styles.iconSize} />,
     routes: ["/offers"]
+  },
+  {
+    label: "Manage Attributes",
+    icon: <Tune sx={styles.iconSize} />,
+    routes: ["/attributes"]
   },
   {
     label: "Manage Categories",
@@ -42,13 +42,19 @@ const Navigation = [
     routesLabel: ["Manage Products", "Create Product", "Update Product"]
   },
   {
-    label: "Orders",
-    icon: <Sell sx={styles.iconSize} />,
-    routes: ["/orders", "/orders/order-detail/:id"],
-    routesLabel: ["Orders", "Order Details"]
+    label: "Manage Variants",
+    icon: <SwitchAccessShortcut sx={styles.iconSize} />,
+    routes: ["/variants", "/variants/create-variant", "/variants/update-variant/:id"],
+    routesLabel: ["Manage Variants", "Create Variant", "Update Variant"]
   },
   {
-    label: "Users",
+    label: "Manage Orders",
+    icon: <Sell sx={styles.iconSize} />,
+    routes: ["/orders", "/orders/order-detail/:id"],
+    routesLabel: ["Manage Orders", "Order Details"]
+  },
+  {
+    label: "Manage Users",
     icon: <Groups sx={styles.iconSize} />,
     routes: ["/users"],
   },

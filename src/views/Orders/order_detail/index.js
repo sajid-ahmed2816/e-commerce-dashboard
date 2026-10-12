@@ -209,6 +209,7 @@ function OrderDetail() {
                         <TableCell>#</TableCell>
                         <TableCell>Image</TableCell>
                         <TableCell>Product</TableCell>
+                        <TableCell>Variant</TableCell>
                         <TableCell align="right">Quantity</TableCell>
                         <TableCell align="right">Price (each)</TableCell>
                         <TableCell align="right">Total</TableCell>
@@ -232,6 +233,30 @@ function OrderDetail() {
                           </TableCell>
                           <TableCell>
                             {item.product ? item.product.name : 'Product deleted'}
+                          </TableCell>
+                          <TableCell>
+                            {item?.variant ? (
+                              <Box>
+                                <Typography variant="body2" fontWeight={600}>
+                                  {item?.sku || item?.variant?.sku}
+                                </Typography>
+
+                                {item?.variant?.attributes?.map((attribute, index) => (
+                                  <Typography
+                                    key={index}
+                                    variant="caption"
+                                    display="block"
+                                    color="text.secondary"
+                                  >
+                                    {attribute?.attribute}: {attribute?.value}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                No variant
+                              </Typography>
+                            )}
                           </TableCell>
                           <TableCell align="right">{item.quantity}</TableCell>
                           <TableCell align="right">Rs. {item.priceEach}</TableCell>

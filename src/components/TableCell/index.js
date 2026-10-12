@@ -6,10 +6,12 @@ const StyledTableCell = styled(MuiTableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: colors.primary,
     color: theme.palette.common.white,
-    padding: 12
+    padding: 12,
+    lineHeight: "2.25em"
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
+    fontSize: 13,
+    padding: "8px 16px"
   },
 }));
 

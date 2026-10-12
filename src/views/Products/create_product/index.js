@@ -1,7 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react'
 import { Box, CardMedia, Grid, Paper, Typography } from '@mui/material';
 import ProductServices from '../../../api/products/ProductServices';
-import UploadService from '../../../api/upload/UploadService';
 import CategoryServices from '../../../api/categories/CategoryServices';
 import SelectField from '../../../components/SelectField';
 import useToast from '../../../hooks/useToast';
@@ -9,17 +8,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { ImageRounded } from '@mui/icons-material';
 import InputField from '../../../components/InputField';
 import PrimaryButton, { SecondaryButton } from '../../../components/Button';
-import Loader from '../../../components/Loader';
-import SizeServices from '../../../api/sizes/SizeServices';
-import MultiSelectField from '../../../components/MultiSelectField';
 import { Switch } from '../../../components/Switch';
 
 function CreateProduct() {
-  const [image, setImage] = useState("");
-  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [thumbnail, setThumbnail] = useState(null);
+  const [selectedThumbnail, setSelectedThumbnail] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [sizes, setSizes] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const {
     register,
@@ -27,53 +22,36 @@ function CreateProduct() {
     formState: { errors },
     reset,
     watch,
-    control,
     setValue,
-    getValues
-  } = useForm({
-    defaultValues: {
-      size: []
-    }
-  });
+  } = useForm();
   const { showToast } = useToast();
 
-  const uploadImage = async (e) => {
-    setIsImageLoading(true);
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const result = await UploadService.uploadImage(formData);
-      if (result) {
-        showToast(result.message, "success");
-        setImage(result.url);
-      }
-    } catch (error) {
-      showToast(error, "error");
-    } finally {
-      setIsImageLoading(false);
-    };
+
+    if (!file) return;
+
+    setSelectedThumbnail(file);
+    setThumbnail(URL.createObjectURL(file));
   };
 
-  const createProduct = async (formData) => {
+  const createProduct = async (data) => {
     setIsLoading(true);
-    const isFeatured = getValues("isFeatured");
-    const obj = {
-      name: formData.name,
-      category: formData.category,
-      size: formData.size,
-      image: image,
-      price: formData.price,
-      description: formData.description,
-      isFeatured: isFeatured
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("category", data.category);
+    formData.append("description", data.description);
+    formData.append("isFeatured", data.isFeatured);
+    if (selectedThumbnail) {
+      formData.append("thumbnail", selectedThumbnail);
     };
     try {
-      const result = await ProductServices.createProduct(obj);
+      const result = await ProductServices.createProduct(formData);
       if (result.status) {
         showToast(result.message, "success");
         reset();
         setSelectedCategory("");
-        setImage("");
+        setThumbnail(null);
       }
     } catch (error) {
       showToast(error, "error");
@@ -94,27 +72,14 @@ function CreateProduct() {
     };
   };
 
-  const getSizes = async () => {
-    try {
-      const result = await SizeServices.getSizes();
-      if (result.status) {
-        const renamed = result.data.sizes.map((item) => ({ name: item.size, value: item._id }));
-        setSizes(renamed);
-      }
-    } catch (error) {
-      showToast(error, "error");
-    };
-  };
-
   const onReset = () => {
     reset();
-    setImage("");
+    setThumbnail("");
     setSelectedCategory("");
   };
 
   useEffect(() => {
     getCategories();
-    getSizes();
   }, []);
 
   return (
@@ -130,7 +95,7 @@ function CreateProduct() {
     >
       <Box
         sx={{
-          height: "calc(100vh - 116px)",
+          height: "calc(100vh - 96px)",
           overflowY: "auto"
         }}
       >
@@ -149,28 +114,6 @@ function CreateProduct() {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item md={6}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                  }}
-                >
-                  <Typography
-                    component={"label"}
-                    variant={"body2"}
-                    htmlFor={"isFeatured"}
-                  >
-                    Mark this as featured?
-                  </Typography>
-                  <Switch
-                    id={"isFeatured"}
-                    checked={watch("isFeatured")}
-                    onChange={(e) => setValue("isFeatured", e.target.checked)}
-                  />
-                </Box>
-              </Grid>
             </Grid>
           </Grid>
           <Grid item md={6}>
@@ -186,81 +129,78 @@ function CreateProduct() {
                 },
               }}
             >
-              {isImageLoading ? (
-                <Loader />
-              ) : (
-                <Fragment>
-                  <input
-                    id="uploadImage"
-                    type="file"
-                    onChange={uploadImage}
-                    style={{
-                      display: "none"
-                    }}
-                  />
-                  <label
-                    htmlFor='uploadImage'
-                    style={{
-                      width: "100%",
-                      height: "-webkit-fill-available",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {image != "" ? (
-                      <Fragment>
-                        <CardMedia
-                          component={"img"}
-                          src={image}
-                          sx={{
-                            width: "100%",
-                            height: "calc(100vh - 219px)",
-                            borderRadius: "4px",
-                            objectFit: "cover"
-                          }}
-                        />
-                        <Box
-                          className="overlay"
-                          sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            backgroundColor: "rgba(0,0,0,0.4)",
-                            color: "white",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity: 0,
-                            transition: "opacity 0.3s",
-                            fontSize: 16,
-                            fontWeight: 500,
-                            cursor: "pointer",
-                          }}
-                        >
-                          <ImageRounded sx={{ fontSize: "48px" }} />
-                          <Typography>Upload Image</Typography>
-                        </Box>
-                      </Fragment>
-                    ) : (
-                      <Box
+
+              <Fragment>
+                <input
+                  id="uploadImage"
+                  type="file"
+                  onChange={handleImageChange}
+                  style={{
+                    display: "none"
+                  }}
+                />
+                <label
+                  htmlFor='uploadImage'
+                  style={{
+                    width: "100%",
+                    height: "-webkit-fill-available",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  {thumbnail != null ? (
+                    <Fragment>
+                      <CardMedia
+                        component={"img"}
+                        src={thumbnail}
                         sx={{
+                          width: "100%",
+                          height: "calc(100vh - 219px)",
+                          borderRadius: "4px",
+                          objectFit: "contain"
+                        }}
+                      />
+                      <Box
+                        className="overlay"
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          backgroundColor: "rgba(0,0,0,0.4)",
+                          color: "white",
                           display: "flex",
-                          flexDirection: "column",
                           alignItems: "center",
-                          gap: 1
+                          justifyContent: "center",
+                          opacity: 0,
+                          transition: "opacity 0.3s",
+                          fontSize: 16,
+                          fontWeight: 500,
+                          cursor: "pointer",
                         }}
                       >
                         <ImageRounded sx={{ fontSize: "48px" }} />
                         <Typography>Upload Image</Typography>
                       </Box>
-                    )}
-                  </label>
-                </Fragment>
-              )}
+                    </Fragment>
+                  ) : (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 1
+                      }}
+                    >
+                      <ImageRounded sx={{ fontSize: "48px" }} />
+                      <Typography>Upload Image</Typography>
+                    </Box>
+                  )}
+                </label>
+              </Fragment>
             </Box>
           </Grid>
           <Grid item md={6}>
@@ -302,47 +242,12 @@ function CreateProduct() {
               </Grid>
               <Grid item md={12}>
                 <Box>
-                  <Controller
-                    name={"size"}
-                    control={control}
-                    render={({ field }) => (
-                      <MultiSelectField
-                        label={"Size"}
-                        fullWidth={true}
-                        value={field?.value}
-                        onChange={field?.onChange}
-                        error={errors?.size && true}
-                        helperText={errors?.size?.message}
-                        options={sizes}
-                      />
-                    )}
-                  />
-                </Box>
-              </Grid>
-              <Grid item md={12}>
-                <Box>
-                  <InputField
-                    variant={"outlined"}
-                    label={"Price"}
-                    fullWidth={true}
-                    type={"text"}
-                    value={watch("price")}
-                    register={register("price", {
-                      required: "Enter Category Name",
-                    })}
-                    error={errors?.price && true}
-                    helperText={errors?.price?.message}
-                  />
-                </Box>
-              </Grid>
-              <Grid item md={12}>
-                <Box>
                   <InputField
                     variant={"outlined"}
                     label={"Description"}
                     fullWidth={true}
                     multiline={true}
-                    rows={6}
+                    rows={12}
                     type={"text"}
                     value={watch("description")}
                     register={register("description", {
@@ -350,6 +255,28 @@ function CreateProduct() {
                     })}
                     error={errors?.description && true}
                     helperText={errors?.description?.message}
+                  />
+                </Box>
+              </Grid>
+              <Grid item md={12}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <Typography
+                    component={"label"}
+                    variant={"body2"}
+                    htmlFor={"isFeatured"}
+                  >
+                    Mark this as featured?
+                  </Typography>
+                  <Switch
+                    id={"isFeatured"}
+                    checked={watch("isFeatured")}
+                    onChange={(e) => setValue("isFeatured", e.target.checked)}
                   />
                 </Box>
               </Grid>

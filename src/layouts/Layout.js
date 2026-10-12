@@ -10,10 +10,17 @@ export const Layout = () => {
       <Header />
       <Box component={"main"} sx={{ display: "flex", height: "100vh" }}>
         <SideNav />
-        <Box sx={{ flexGrow: 1, mt: "64px" }}>
+        <Box
+          sx={{
+            flexGrow: 1,
+            mt: "64px",
+            borderTopLeftRadius: "12px",
+            background: "#FFFFFF"
+          }}
+        >
           <Outlet />
         </Box>
       </Box>
-    </Fragment>
+    </Fragment >
   );
 };

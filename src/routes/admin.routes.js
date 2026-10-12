@@ -7,11 +7,14 @@ import Banners from "../views/Banners";
 import Users from "../views/Users";
 import Blogs from "../views/Blogs/all_blogs";
 import UpdateProduct from "../views/Products/update_product";
-import Sizes from "../views/Sizes";
 import Offers from "../views/Offers";
 import CreateBlog from "../views/Blogs/create_blog";
 import UpdateBlog from "../views/Blogs/update_blog";
 import OrderDetail from "../views/Orders/order_detail";
+import Attributes from "../views/Attributes";
+import Variants from "../views/Variants/all_variants";
+import CreateVariant from "../views/Variants/create_variant";
+import UpdateVariant from "../views/Variants/update_variant";
 
 const adminRoutes = [
   {
@@ -31,6 +34,14 @@ const adminRoutes = [
     component: <CreateProduct />,
   },
   {
+    path: "/variants/create-variant",
+    component: <CreateVariant />,
+  },
+  {
+    path: "/variants/update-variant/:id",
+    component: <UpdateVariant />,
+  },
+  {
     path: "/products/update-product/:id",
     component: <UpdateProduct />,
   },
@@ -39,16 +50,20 @@ const adminRoutes = [
     component: <Products />,
   },
   {
+    path: "/variants",
+    component: <Variants />,
+  },
+  {
+    path: "/attributes",
+    component: <Attributes />,
+  },
+  {
     path: "/categories",
     component: <Categories />,
   },
   {
     path: "/offers",
     component: <Offers />,
-  },
-  {
-    path: "/sizes",
-    component: <Sizes />,
   },
   {
     path: "/banners",

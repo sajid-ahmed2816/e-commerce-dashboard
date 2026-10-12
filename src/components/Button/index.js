@@ -21,14 +21,14 @@ function PrimaryButton({ title, sx, startIcon, isLoading, ...props }) {
   );
 };
 
-function SecondaryButton({ title, sx, startIcon, ...props }) {
+function SecondaryButton({ title, sx, startIcon, color, ...props }) {
   return (
     <Button
       variant={"outlined"}
       startIcon={startIcon}
       sx={{
-        borderColor: Colors.primary,
-        color: Colors.primary,
+        borderColor: color || Colors.primary,
+        color: color || Colors.primary,
         borderRadius: "6px",
         textTransform: "capitalize"
       }}
@@ -42,14 +42,14 @@ function SecondaryButton({ title, sx, startIcon, ...props }) {
 function IconButton({ type, onClick, children }) {
   const editBtnStyle = {
     background: "transparent",
-    border: `1px solid ${colors.blue.A700}`,
+    border: `1px solid ${Colors.primary}`,
     "svg": {
       fontSize: "22px",
-      fill: colors.blue.A700
+      fill: Colors.primary
     },
     ":hover": {
-      border: `1px solid ${colors.blue.A700}`,
-      background: colors.blue.A700,
+      border: `1px solid ${Colors.primary}`,
+      background: Colors.primary,
       "svg": {
         fill: "#ffffff"
       }

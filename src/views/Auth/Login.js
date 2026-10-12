@@ -61,20 +61,6 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  // const onSubmit = async (formData) => {
-  //   setLoading(true);
-  //   try {
-  //     const user = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-  //     if (user.user.uid) {
-  //       navigate("/");
-  //     }
-  //   } catch (error) {
-  //     console.log("error => ", error)
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const onSubmit = async (formData) => {
     setLoading(true);
     const obj = {
@@ -104,7 +90,7 @@ export default function Login() {
 
   return (
     <Fragment>
-      <Box sx={{ height: "100vh", display: "flex", alignItems: "center" }}>
+      <Box sx={{ height: "100vh", display: "flex", alignItems: "center", background: "#FFFFFF" }}>
         <Container maxWidth="xs">
           <CssBaseline />
           <Box

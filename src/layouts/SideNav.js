@@ -79,8 +79,9 @@ export default function SideNav() {
         sx={{
           display: "flex",
           flexDirection: "column",
-          gap: 1,
-          p: 0
+          gap: "8px",
+          p: 0,
+          pt: 2
         }}
       >
         {Navigation.map((item, index) => item.subMenu ? (
@@ -144,7 +145,13 @@ export default function SideNav() {
             </Collapse>
           </Fragment>
         ) : (
-          <ListItem disablePadding={true} key={index}>
+          <ListItem
+            disablePadding={true}
+            key={index}
+            sx={{
+              px: 1
+            }}
+          >
             <ListItemButton
               onClick={() => handleItemClick(item.routes[0])}
               sx={{
@@ -161,28 +168,27 @@ export default function SideNav() {
                 },
                 "::before": {
                   content: "''",
-                  width: item.routes.includes(pathname) ? "15px" : "0px",
+                  width: item.routes.includes(pathname) ? "25px" : "0px",
                   height: "3px",
                   background: colors.primary,
                   transition: "all .3s ease-in-out",
                   borderRadius: "4px"
                 },
-                borderTop: item.routes.includes(pathname) ? `1px solid ${colors.white}` : `1px solid ${colors.primary}`,
-                borderBottom: item.routes.includes(pathname) ? `1px solid ${colors.white}` : `1px solid ${colors.primary}`,
+                border: item.routes.includes(pathname) ? `1px solid ${colors.white}` : `1px solid ${colors.primary}`,
                 ":hover": {
                   background: item.routes.includes(pathname) ? colors.white : "transparent",
-                  borderTop: `1px solid ${colors.white}`,
-                  borderBottom: `1px solid ${colors.white}`,
-                }
+                  border: `1px solid ${colors.white}`,
+                },
+                borderRadius: "8px"
               }}
             >
-              <ListItemIcon sx={{ minWidth: "25px" }}>{item.icon}</ListItemIcon>
+              {item.routes.includes(pathname) ? null : <ListItemIcon sx={{ minWidth: "25px" }}>{item.icon}</ListItemIcon>}
               <ListItemText
                 primary={item.label}
                 sx={{
                   "& .MuiTypography-root": {
                     fontFamily: "Comfortaa",
-                    fontSize: "14px"
+                    fontSize: "13px"
                   },
                 }}
               />

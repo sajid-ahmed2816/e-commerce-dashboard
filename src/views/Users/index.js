@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
-import { Delete, Edit, ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
+import { Box, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { ErrorOutline, Search } from '@mui/icons-material';
+import { Edit, Delete } from '../../assets/icons';
 import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
@@ -257,15 +258,23 @@ function Users() {
           <Grid item md={12}>
             <TableContainer
               sx={{
-                height: "calc(100vh - 200px)",
+                height: "calc(100vh - 194px)",
                 overflowY: "auto"
               }}
             >
               <Table size='small' sx={{ fontSize: "14px" }}>
                 <TableHead>
                   <TableRow>
-                    {tableHead.map((ind) => (
-                      <TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
+                    {tableHead.map((item, ind) => (
+                      <TableCell
+                        key={item}
+                        sx={{
+                          textAlign: item === "Actions" ? "center" : "left",
+                          borderRadius: ind === 0 ? "8px 0px 0px 0px" : ind === tableHead.length - 1 ? "0px 8px 0px 0px" : "0px"
+                        }}
+                      >
+                        {item}
+                      </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
@@ -333,8 +342,8 @@ function Users() {
                     gap: 1
                   }}
                 >
-                  <Typography>Total Users:</Typography>
-                  <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>Total Users:</Typography>
+                  <Typography sx={{ fontSize: "13px", fontWeight: 600 }}>{totalCount}</Typography>
                 </Box>
               </Grid>
               <Grid item md={6}>

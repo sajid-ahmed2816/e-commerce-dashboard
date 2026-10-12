@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { Box, CardMedia, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
-import { Delete, Edit, ErrorOutline, Search } from '@mui/icons-material';
+import { ErrorOutline, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
+import { Edit, Delete } from '../../assets/icons';
 import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
@@ -414,12 +415,9 @@ function Offers() {
 				</Grid>
 			</Dialog>
 			<Box
-				component={Paper}
-				elevation={4}
 				sx={{
 					height: "100%",
 					width: "100%",
-					borderRadius: "6px",
 					p: 2
 				}}
 			>
@@ -462,15 +460,23 @@ function Offers() {
 					<Grid item md={12}>
 						<TableContainer
 							sx={{
-								height: "calc(100vh - 200px)",
+								height: "calc(100vh - 194px)",
 								overflowY: "auto"
 							}}
 						>
 							<Table size='small'>
 								<TableHead>
 									<TableRow>
-										{tableHead.map((ind) => (
-											<TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
+										{tableHead.map((item, ind) => (
+											<TableCell
+												key={item}
+												sx={{
+													textAlign: item === "Actions" ? "center" : "left",
+													borderRadius: ind === 0 ? "8px 0px 0px 0px" : ind === tableHead.length - 1 ? "0px 8px 0px 0px" : "0px"
+												}}
+											>
+												{item}
+											</TableCell>
 										))}
 									</TableRow>
 								</TableHead>
@@ -557,8 +563,8 @@ function Offers() {
 										gap: 1
 									}}
 								>
-									<Typography>Total offers:</Typography>
-									<Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+									<Typography sx={{ fontSize: "13px" }}>Total Offers:</Typography>
+									<Typography sx={{ fontSize: "13px", fontWeight: 600 }}>{totalCount}</Typography>
 								</Box>
 							</Grid>
 							<Grid item md={6}>

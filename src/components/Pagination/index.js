@@ -1,29 +1,4 @@
-// import { Pagination } from "@mui/material";
-
-// function TablePagination({ totalPages, page, onChange }) {
-//   return (
-//     <Pagination
-//       color={"primary"}
-//       size={"medium"}
-//       shape={"rounded"}
-//       variant={"outlined"}
-//       siblingCount={2}
-//       boundaryCount={2}
-//       count={totalPages}
-//       page={page}
-//       onChange={onChange}
-//       sx={{
-//         "& .MuiPagination-ul": {
-//           justifyContent: "flex-end"
-//         }
-//       }}
-//     />
-//   );
-// };
-
-// export default TablePagination;
-
-import { Pagination, Select, MenuItem, Box, Typography, InputLabel, FormControl } from "@mui/material";
+import { Pagination, Select, MenuItem, Box, Typography, FormControl } from "@mui/material";
 
 function TablePagination({
   totalPages,
@@ -48,7 +23,7 @@ function TablePagination({
           gap: 2
         }}
       >
-        <Typography>Rows per page</Typography>
+        <Typography sx={{ fontSize: "13px" }}>Rows per page</Typography>
         <FormControl>
           <Select
             labelId="rowsPerPage"
@@ -56,6 +31,18 @@ function TablePagination({
             value={rowsPerPage}
             onChange={onRowsPerPageChange}
             sx={{ minWidth: 70 }}
+            slotProps={{
+              root: {
+                sx: {
+                  fontSize: "13px"
+                }
+              },
+              input: {
+                sx: {
+                  py: "3.4px"
+                }
+              }
+            }}
           >
             {[10, 25, 50, 100].map((option) => (
               <MenuItem key={option} value={option}>
@@ -67,7 +54,7 @@ function TablePagination({
       </Box>
       <Pagination
         color={"primary"}
-        size={"medium"}
+        size={"small"}
         shape={"rounded"}
         variant={"outlined"}
         siblingCount={2}

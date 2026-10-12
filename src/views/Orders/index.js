@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Checkbox, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
-import { Delete, ErrorOutline, Search, Visibility } from '@mui/icons-material';
+import { ErrorOutline, Search } from '@mui/icons-material';
+import { Delete, Visibility } from '../../assets/icons';
 import PrimaryButton, { SecondaryButton, IconButton } from '../../components/Button';
 import TableRow from '../../components/TableRow';
 import TableCell from '../../components/TableCell';
@@ -253,14 +254,19 @@ function Orders() {
           <Grid item md={12}>
             <TableContainer
               sx={{
-                height: "calc(100vh - 200px)",
+                height: "calc(100vh - 194px)",
                 overflowY: "auto"
               }}
             >
               <Table size='small'>
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox">
+                    <TableCell
+                      padding="checkbox"
+                      sx={{
+                        borderTopLeftRadius: "8px"
+                      }}
+                    >
                       <Box
                         sx={{
                           display: "flex",
@@ -281,8 +287,16 @@ function Orders() {
                         />
                       </Box>
                     </TableCell>
-                    {tableHead.map((ind) => (
-                      <TableCell key={ind} sx={{ textAlign: ind === "Actions" ? "center" : "left" }}>{ind}</TableCell>
+                    {tableHead.map((item, ind) => (
+                      <TableCell
+                        key={item}
+                        sx={{
+                          textAlign: item === "Actions" ? "center" : "left",
+                          borderRadius: ind === tableHead.length - 1 ? "0px 8px 0px 0px" : "0px"
+                        }}
+                      >
+                        {item}
+                      </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
@@ -361,8 +375,8 @@ function Orders() {
                     gap: 1
                   }}
                 >
-                  <Typography>Total Orders:</Typography>
-                  <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>Total Orders:</Typography>
+                  <Typography sx={{ fontSize: "13px", fontWeight: 600 }}>{totalCount}</Typography>
                 </Box>
               </Grid>
               <Grid item md={6}>

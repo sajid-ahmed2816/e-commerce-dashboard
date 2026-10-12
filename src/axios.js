@@ -15,12 +15,12 @@ instance.interceptors.request.use((request) => {
   return request;
 });
 
-instance.interceptors.response.use(
-  (response) => {
-    if (response) {
-      return response;
-    }
-  }
-);
+instance.interceptors.response.use((response) => {
+  if (response) {
+    return response;
+  };
+}, (error) => {
+  return Promise.reject(error);
+});
 
 export default instance;

@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, CardMedia, Checkbox, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
-import { Delete, Edit, ErrorOutline, Search } from '@mui/icons-material';
+import { Box, CardMedia, Checkbox, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors, Menu, MenuItem, Divider } from '@mui/material';
+import { ErrorOutline, Search, MoreHoriz, Edit, Delete, AddBox } from '@mui/icons-material';
+import moment from 'moment';
 import PrimaryButton, { SecondaryButton, IconButton } from '../../../components/Button';
 import TableRow from '../../../components/TableRow';
 import TableCell from '../../../components/TableCell';
@@ -12,12 +13,13 @@ import ProductServices from '../../../api/products/ProductServices';
 import useDebounce from '../../../utils/Debounce';
 import TablePagination from '../../../components/Pagination';
 import { useForm } from 'react-hook-form';
-import moment from 'moment';
 import TableHead from '../../../components/TableHead';
 import { Switch } from '../../../components/Switch';
 import Loader from '../../../components/Loader';
+import NoPreview from '../../../components/NoPreview';
+import Colors from '../../../assets/styles/colors';
 
-const tableHead = ["Image", "Name", "Category", "Price", "Featured", "Status", "Created At", "Actions"];
+const tableHead = ["Thumbnail", "Name", "Category", "Featured", "Status", "Created At", "Actions"];
 
 function Products() {
   const [isLoading, setIsLoading] = useState("");
@@ -25,6 +27,8 @@ function Products() {
   const [products, setProducts] = useState([]);
   const [activeIds, setActiveIds] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [actionMenuAnchor, setActionMenuAnchor] = useState(null);
+  const [actionMenuProduct, setActionMenuProduct] = useState(null);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -58,6 +62,16 @@ function Products() {
       prev.set("page", 1);  // Reset to first page
       return prev;
     });
+  };
+
+  const handleActionMenuOpen = (event, product) => {
+    setActionMenuAnchor(event.currentTarget);
+    setActionMenuProduct(product);
+  };
+
+  const handleActionMenuClose = () => {
+    setActionMenuAnchor(null);
+    setActionMenuProduct(null);
   };
 
   const handleBulkUpload = async () => {
@@ -214,6 +228,119 @@ function Products() {
 
   return (
     <Fragment>
+      <Menu
+        anchorEl={actionMenuAnchor}
+        open={Boolean(actionMenuAnchor)}
+        onClose={handleActionMenuClose}
+        MenuListProps={{
+          onMouseLeave: handleActionMenuClose,
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              minWidth: "160px"
+            }
+          },
+          root: {
+            sx: {
+              "& .MuiTypography-root": {
+                fontSize: "13px"
+              }
+            }
+          }
+        }}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+      >
+
+        <MenuItem
+          color={Colors.primary}
+          onClick={() => {
+            const product = actionMenuProduct;
+            handleActionMenuClose();
+            setSelectedProduct(product);
+            navigate(`/products/update-product/${product._id}`, {
+              state: {
+                ...product,
+                page,
+                limit,
+                searchQuery,
+              },
+            });
+          }}
+        >
+
+          <Typography
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}
+          >
+            <Edit sx={{ fontSize: "15px" }} />
+            <Box
+              component={"span"}
+              sx={{ pt: "4px" }}
+            >
+              Edit
+            </Box>
+          </Typography>
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          color={colors.red.A700}
+          onClick={() => {
+            const product = actionMenuProduct;
+            handleActionMenuClose();
+            setSelectedProduct(product);
+            handleConfirmationDialog();
+          }}
+        >
+          <Typography
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}
+          >
+            <Delete sx={{ fontSize: "15px" }} />
+            <Box
+              component={"span"}
+              sx={{ pt: "4px" }}
+            >
+              Delete
+            </Box>
+          </Typography>
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          color={Colors.primary}
+        >
+
+          <Typography
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}
+          >
+            <AddBox sx={{ fontSize: "15px" }} />
+            <Box
+              component={"span"}
+              sx={{ pt: "4px" }}
+            >
+              Add Variant
+            </Box>
+          </Typography>
+        </MenuItem>
+      </Menu>
+
       {/* Single Delete Dialog */}
       <Dialog
         open={isConfirmationDialogOpen}
@@ -266,7 +393,7 @@ function Products() {
             Upload a CSV or Excel file with product data.
           </Typography>
           <Typography variant="caption" color="textSecondary">
-            Required columns: name, category, price, image (URL), description, etc.
+            Required columns: name, category, description.
             <br />
             <a href="/sample-bulk-upload-template.csv" download>Download sample template</a>
           </Typography>
@@ -343,15 +470,20 @@ function Products() {
             </Grid>
           </Grid>
           <Grid item md={12}>
-            <TableContainer sx={{ height: "calc(100vh - 204px)", overflowY: "auto" }}>
+            <TableContainer sx={{ height: "calc(100vh - 194px)", overflowY: "auto" }}>
               <Table size='small'>
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox">
+                    <TableCell
+                      padding="checkbox"
+                      sx={{
+                        borderTopLeftRadius: "8px"
+                      }}
+                    >
                       <Box
                         sx={{
                           display: "flex",
-                          justifyContent: "end"
+                          justifyContent: "center"
                         }}
                       >
                         <Checkbox
@@ -368,8 +500,17 @@ function Products() {
                         />
                       </Box>
                     </TableCell>
-                    {tableHead.map((ind) => (
-                      <TableCell key={ind} sx={{ textAlign: (ind === "Image" || ind === "Actions") ? "center" : "left" }}>{ind}</TableCell>
+                    {tableHead.map((item, ind) => (
+                      <TableCell
+                        key={item}
+                        sx={{
+                          textAlign: (item === "Thumbnail" || item === "Actions") ? "center" : "left",
+                          whiteSpace: "nowrap",
+                          borderRadius: ind === tableHead.length - 1 ? "0px 8px 0px 0px" : "0px"
+                        }}
+                      >
+                        {item}
+                      </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
@@ -388,10 +529,15 @@ function Products() {
                           onChange={() => handleSelectRow(item._id)}
                         />
                       </TableCell>
-                      <TableCell><CardMedia src={item.image} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "contain" }} /></TableCell>
+                      <TableCell>
+                        {item.thumbnail ? (
+                          <CardMedia src={item.thumbnail} component={"img"} sx={{ width: "80px", height: "40px", objectFit: "contain" }} />
+                        ) : (
+                          <NoPreview />
+                        )}
+                      </TableCell>
                       <TableCell><Box sx={{ textWrap: "wrap" }}>{item.name}</Box></TableCell>
                       <TableCell>{item?.category?.name}</TableCell>
-                      <TableCell>{item.price}</TableCell>
                       <TableCell><Chip label={item?.isFeatured ? "Yes" : "No"} variant={"outlined"} color={item?.isFeatured ? "success" : "error"} size={"small"} /></TableCell>
                       <TableCell>
                         <Switch
@@ -401,24 +547,16 @@ function Products() {
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{moment(item?.createdAt).format("DD-MM-YYYY")}</TableCell>
                       <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <IconButton
-                            type={"edit"}
-                            onClick={() => {
-                              setSelectedProduct(item);
-                              navigate(`/products/update-product/${item._id}`, { state: { ...item, page, limit, searchQuery } });
-                            }}
-                          >
-                            <Edit />
-                          </IconButton>
-                          <IconButton
-                            type={"delete"}
-                            onClick={() => {
-                              setSelectedProduct(item);
-                              handleConfirmationDialog();
-                            }}
-                          >
-                            <Delete />
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                          onMouseEnter={(event) => handleActionMenuOpen(event, item)}
+                        >
+                          <IconButton>
+                            <MoreHoriz />
                           </IconButton>
                         </Box>
                       </TableCell>
@@ -438,8 +576,8 @@ function Products() {
             <Grid container alignItems={"center"}>
               <Grid item md={6}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography>Total Products:</Typography>
-                  <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>Total Products:</Typography>
+                  <Typography sx={{ fontSize: "13px", fontWeight: 600 }}>{totalCount}</Typography>
                 </Box>
               </Grid>
               <Grid item md={6}>

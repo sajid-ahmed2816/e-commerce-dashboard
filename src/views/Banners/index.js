@@ -474,7 +474,7 @@ function Banners() {
                 <Box
                   ref={scrollContainerRef}
                   sx={{
-                    height: "calc(100vh - 188px)",
+                    height: "calc(100vh - 184px)",
                     overflowY: "auto"
                   }}
                 >
@@ -512,8 +512,8 @@ function Banners() {
                 <Grid container alignItems={"center"}>
                   <Grid item md={6}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography>Total Banners:</Typography>
-                      <Typography sx={{ fontWeight: 600 }}>{totalCount}</Typography>
+                      <Typography sx={{ fontSize: "13px" }}>Total Banners:</Typography>
+                      <Typography sx={{ fontSize: "13px", fontWeight: 600 }}>{totalCount}</Typography>
                     </Box>
                   </Grid>
                 </Grid>
