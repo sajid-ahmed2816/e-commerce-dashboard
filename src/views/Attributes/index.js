@@ -20,7 +20,6 @@ function Attributes() {
   const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false);
   const [isAttributeValueDialogOpen, setIsAttributeValueDialogOpen] = useState(false);
   const [selectedAttribute, setSelectedAttribute] = useState(null);
-  console.log("🚀 ~ Attributes ~ selectedAttribute:", selectedAttribute)
   const [selectedAttributeForEdit, setSelectedAttributeForEdit] = useState(null);
   const [selectedAttributeValue, setSelectedAttributeValue] = useState(null);
   const [selectedAttributeValueForEdit, setSelectedAttributeValueForEdit] = useState(null);
@@ -187,7 +186,6 @@ function Attributes() {
   };
 
   const deleteAttribute = async (id) => {
-    console.log("🚀 ~ deleteAttribute ~ id:", id)
     if (!id) return;
     setIsADLoading(true);
     try {

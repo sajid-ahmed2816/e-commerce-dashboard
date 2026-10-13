@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, IconButton, Stack, TextField, Typography, } from "@mui/material";
-import { Close, Delete, ImageOutlined, Refresh, Save, } from "@mui/icons-material";
+import { Close, ImageOutlined, Save, } from "@mui/icons-material";
 import { red } from "@mui/material/colors";
 import { useForm } from "react-hook-form";
 import PrimaryButton, { SecondaryButton } from "../../../components/Button";
@@ -11,6 +11,7 @@ import AttributeServices from "../../../api/attributes/AttributeServices";
 import AttributeValueServices from "../../../api/attribute_values/AttributeValueServices";
 import useToast from "../../../hooks/useToast";
 import ProductVariantServices from "../../../api/product_variants/ProductVariantServices";
+import { Switch } from "../../../components/Switch";
 
 function UpdateVariant() {
   const [productCategoryAttributes, setProductCategoryAttributes] = useState([]);
@@ -21,7 +22,10 @@ function UpdateVariant() {
   const [products, setProducts] = useState([]);
   const [variant, setVariant] = useState(null);
 
-  const { register } = useForm();
+  const variantLoadedRef = useRef(false);
+  const productsLoadedRef = useRef(false);
+
+  const { register, watch, setValue, getValues } = useForm();
 
   const { showToast } = useToast();
 
@@ -34,12 +38,15 @@ function UpdateVariant() {
     setSelectedAttributes({});
   };
 
-  const getSelectedVariantAttributes = () =>
-    Object.entries(selectedAttributes).filter(([, valueIds]) => valueIds?.length > 0)
-      .map(([attributeId, valueIds]) => ({
-        attribute: attributeId,
-        value: valueIds[0],
-      }));
+  const getSelectedVariantAttributes = () => {
+    return Object.entries(selectedAttributes).filter(
+      ([, valueIds]) => valueIds?.length > 0).map(
+        ([attributeId, valueIds]) => ({
+          attribute: attributeId,
+          value: valueIds[0],
+        })
+      );
+  };
 
   const toggleAttributeValue = (attributeId, valueId) => {
     setSelectedAttributes((prev) => ({
@@ -95,14 +102,16 @@ function UpdateVariant() {
     return value?.value || "";
   };
 
-  const getVariantTitle = (attributes = []) => attributes.map((item) => getAttributeValue(
-    typeof item.attribute === "object"
-      ? item.attribute._id
-      : item.attribute,
-    typeof item.value === "object"
-      ? item.value._id
-      : item.value
-  )).filter(Boolean).join(" / ") || "Variant";
+  const getVariantTitle = (attributes = []) => {
+    return attributes.map((item) => getAttributeValue(
+      typeof item.attribute === "object"
+        ? item.attribute._id
+        : item.attribute,
+      typeof item.value === "object"
+        ? item.value._id
+        : item.value
+    )).filter(Boolean).join(" / ") || "Variant"
+  };
 
   const loadProductAttributes = async (selected, existingAttributes = []) => {
     const categoryAttributeIds = (selected.category?.attributes || []).map((item) =>
@@ -113,7 +122,7 @@ function UpdateVariant() {
       setProductCategoryAttributes([]);
       setSelectedAttributes({});
       return;
-    }
+    };
 
     setIsAttributesLoading(true);
 
@@ -221,7 +230,7 @@ function UpdateVariant() {
     formData.append("attributes", JSON.stringify(attributes));
     formData.append("price", String(Number(variant.price)));
     formData.append("stock", String(Number(variant.stock)));
-    formData.append("isActive", String(variant.isActive));
+    formData.append("isActive", String(getValues("isActive")));
 
     // Sirf existing images ke public_id bhejo jo abhi retained hain.
     const existingImages = variant.images.filter(
@@ -284,29 +293,22 @@ function UpdateVariant() {
         typeof currentVariant.product === "object" ? currentVariant.product._id : currentVariant.product
       );
 
-      const productFromList = products.find((item) => String(item._id) === productId);
+      const populatedProduct = currentVariant.product;
 
-      const populatedProduct = typeof currentVariant.product === "object" ? currentVariant.product : null;
-
-      const selected = productFromList || (populatedProduct ?
-        { ...populatedProduct, value: productId } :
-        null
-      );
-
-      if (!selected) {
+      if (!populatedProduct) {
         showToast("Associated product not found", "error");
         return;
-      }
+      };
 
-      setSelectedProduct(selected);
-
+      setValue("isActive", currentVariant?.isActive);
+      setSelectedProduct({ ...populatedProduct, value: productId });
       setVariant({
         id: currentVariant._id,
         productId,
-        sku: currentVariant.sku || "",
-        price: currentVariant.price ?? "",
-        stock: currentVariant.stock ?? "",
-        isActive: currentVariant.isActive ?? true,
+        sku: currentVariant.sku,
+        price: currentVariant.price,
+        stock: currentVariant.stock,
+        isActive: currentVariant.isActive,
         images: (currentVariant.images || []).map(
           (image, index) => ({
             ...image,
@@ -316,102 +318,24 @@ function UpdateVariant() {
         ),
       });
 
-      await loadProductAttributes(
-        selected,
-        currentVariant.attributes || []
-      );
+      await loadProductAttributes(populatedProduct, currentVariant.attributes || []);
     } catch (error) {
-      showToast(
-        error?.response?.data?.message || "Failed to load variant",
-        "error"
-      );
+      showToast(error?.response?.data?.message || "Failed to load variant", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSelectProduct = async (productId) => {
-    const selected = products.find((item) => item._id === productId);
-
-    setSelectedProduct(selected);
-
-    // Product change hone par purane variants/selections clear karo
-    setSelectedAttributes({});
-    setProductCategoryAttributes([]);
-
-    if (!selected) return;
-
-    // Product ki populated category se assigned attribute IDs
-    const categoryAttributeIds = (selected.category?.attributes || []).map((item) =>
-      String(typeof item === "object" ? item._id : item)
-    );
-
-    if (!categoryAttributeIds.length) return;
-
-    setIsAttributesLoading(true);
-
-    try {
-      // Saare attributes fetch karo, phir category ke IDs se filter karo
-      const attributeResult = await AttributeServices.getAttributes({
-        page: 1,
-        limit: "all",
-      });
-
-      if (!attributeResult?.status) {
-        setProductCategoryAttributes([]);
-        return;
-      }
-
-      const allAttributes = attributeResult?.data?.attributes || [];
-
-      const matchingAttributes = allAttributes.filter((attribute) =>
-        categoryAttributeIds.includes(String(attribute._id)) &&
-        attribute.isActive
-      );
-
-      // Har assigned attribute ki values fetch karo
-      const valueResults = await Promise.all(matchingAttributes.map((attribute) =>
-        AttributeValueServices.getAttributeValues({
-          attribute: attribute._id,
-          page: 1,
-          limit: "all",
-        })
-      ));
-
-      const attributesWithValues = matchingAttributes.map((attribute, index) => ({
-        ...attribute,
-        values: (
-          valueResults[index]?.data?.attributeValues || []
-        ).filter((value) => value.isActive),
-      }));
-
-      setProductCategoryAttributes(attributesWithValues);
-
-      // Har attribute ke liye initial empty selection
-      const initialSelections = {};
-
-      attributesWithValues.forEach((attribute) => {
-        initialSelections[attribute._id] = [];
-      });
-
-      setSelectedAttributes(initialSelections);
-    } catch (error) {
-      console.error("Failed to load category attributes:", error);
-      setProductCategoryAttributes([]);
-    } finally {
-      setIsAttributesLoading(false);
-    }
-  };
-
   useEffect(() => {
-    getProducts();
-  }, []);
-
-  useEffect(() => {
-    if (products.length > 0) {
+    if (!productsLoadedRef.current) {
+      productsLoadedRef.current = true;
+      getProducts();
+    };
+    if (!variantLoadedRef.current) {
+      variantLoadedRef.current = true;
       getProductVariant();
-    }
-  }, [products, id]);
+    };
+  }, [id]);
 
   return (
     <Box
@@ -437,6 +361,28 @@ function UpdateVariant() {
             Update Variant
           </Typography>
         </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1
+          }}
+        >
+          <Typography
+            component={"label"}
+            variant={"body2"}
+            htmlFor={"status"}
+          >
+            Status
+          </Typography>
+          <Switch
+            id={"status"}
+            checked={watch("isActive")}
+            onChange={(e) => setValue("isActive", e.target.checked)}
+          />
+        </Box>
       </Stack>
 
       {/* =================================================
@@ -448,11 +394,7 @@ function UpdateVariant() {
           disabled={true}
           label={"Select Product"}
           value={selectedProduct != null ? selectedProduct?.value : ""}
-          register={register("product", {
-            onChange: (e) => {
-              handleSelectProduct(e.target.value);
-            },
-          })}
+          register={register("product")}
           options={products}
         />
       </Stack>

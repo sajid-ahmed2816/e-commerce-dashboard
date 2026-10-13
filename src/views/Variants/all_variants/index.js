@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, CardMedia, Chip, colors, Grid, InputAdornment, Table, TableBody, TableContainer, Typography } from '@mui/material';
+import { Box, Chip, colors, Grid, InputAdornment, Table, TableBody, TableContainer, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import InputField from '../../../components/InputField';
 import { ErrorOutline, Search } from '@mui/icons-material';
@@ -24,7 +24,6 @@ function Variants() {
   const [isLoading, setIsLoading] = useState(false);
   const [variants, setVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(null);
-  console.log("🚀 ~ Variants ~ selectedVariant:", selectedVariant)
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);

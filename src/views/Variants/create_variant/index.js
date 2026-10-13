@@ -16,7 +16,6 @@ function CreateVariant() {
   const [isAttributesLoading, setIsAttributesLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  console.log("🚀 ~ CreateVariant ~ selectedProduct:", selectedProduct)
   const [selectedAttributes, setSelectedAttributes] = useState({});
   const [products, setProducts] = useState([]);
   const [variants, setVariants] = useState([]);

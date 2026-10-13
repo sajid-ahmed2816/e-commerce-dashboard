@@ -92,7 +92,7 @@ function UpdateProduct() {
   useEffect(() => {
     getCategories();
     setDefaultData();
-  }, []);
+  }, [state]);
 
   return (
     <Box
@@ -258,7 +258,7 @@ function UpdateProduct() {
                     label={"Description"}
                     fullWidth={true}
                     multiline={true}
-                    rows={12}
+                    rows={11}
                     type={"text"}
                     value={watch("description")}
                     register={register("description", {

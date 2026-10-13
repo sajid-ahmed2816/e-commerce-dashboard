@@ -113,12 +113,12 @@ export default function SideNav() {
                     onClick={() => navigate(subItem.path)}
                     sx={{
                       px: "42px",
-                      background: pathname == subItem.path ? colors.white : colors.primary,
-                      color: pathname == subItem.path ? colors.primary : colors.white,
+                      background: pathname === subItem.path ? colors.white : colors.primary,
+                      color: pathname === subItem.path ? colors.primary : colors.white,
                       borderRadius: "4px",
                       "svg": {
                         "path": {
-                          fill: pathname == subItem.path ? colors.primary : colors.white,
+                          fill: pathname === subItem.path ? colors.primary : colors.white,
                         }
                       },
                       ":hover": {
