@@ -41,7 +41,6 @@ function Users() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
     watch
   } = useForm({
     defaultValues: { search: searchQuery || "" }

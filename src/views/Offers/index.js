@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Box, CardMedia, Grid, InputAdornment, Paper, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
+import { Box, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { ErrorOutline, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { Edit, Delete } from '../../assets/icons';

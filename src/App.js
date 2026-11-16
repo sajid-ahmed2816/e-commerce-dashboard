@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import {
   BrowserRouter,
-  Navigate,
   Outlet,
   Routes,
   Route,

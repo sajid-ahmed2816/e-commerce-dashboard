@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useState } from 'react'
 import { Box, CardMedia, Grid, Paper, Typography } from '@mui/material';
 import BlogServices from '../../../api/blogs/BlogServices';
 import UploadService from '../../../api/upload/UploadService';

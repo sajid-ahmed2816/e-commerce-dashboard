@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const baseUrl = "http://localhost:3030/api";
+const baseUrl = process.env.REACT_APP_API_URL || (
+  process.env.NODE_ENV === "production"
+    ? "https://e-commerce-backend-rho-flame.vercel.app/api"
+    : "http://localhost:3030/api"
+);
 
 const instance = axios.create({
   baseURL: baseUrl

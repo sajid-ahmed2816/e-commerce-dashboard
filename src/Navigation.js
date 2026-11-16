@@ -1,4 +1,4 @@
-import { Dashboard, Category, Workspaces, ViewCarousel, Groups, Article, Info, AccountCircle, Sell, LocalActivity, CandlestickChart, Tune, SwitchAccessShortcut } from "@mui/icons-material";
+import { Dashboard, Category, Workspaces, ViewCarousel, Groups, Article, Sell, LocalActivity, Tune, SwitchAccessShortcut } from "@mui/icons-material";
 import colors from "./assets/styles/colors";
 
 const styles = {

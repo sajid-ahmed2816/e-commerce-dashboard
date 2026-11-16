@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Box, Grid, Paper, Typography } from "@mui/material";
-import { Category, Group, Groups, Paid, Sell, ShoppingBag, Workspaces } from "@mui/icons-material";
+import { Box, Grid, Typography } from "@mui/material";
+import { Groups, Paid, Sell, Workspaces } from "@mui/icons-material";
 import { LineChart } from "@mui/x-charts/LineChart"
 import DashboardServices from "../../api/dashboard/DashboardService";
 import useToast from "../../hooks/useToast";
@@ -30,7 +30,6 @@ function Dashboard() {
   const xLabels = data?.chart?.map(item => item.month);
   const ordersData = data?.chart?.map(item => item.orders);
   const usersData = data?.chart?.map(item => item.users);
-  const revenueData = data?.chart?.map(item => item.revenue);
 
   return (
     <Box

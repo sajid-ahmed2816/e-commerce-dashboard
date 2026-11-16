@@ -43,7 +43,12 @@ export async function subscribeToPush(registration) {
     });
 
     // Send subscription to backend
-    const response = await fetch('http://localhost:3030/api/push/subscribe', {
+    const apiUrl = process.env.REACT_APP_API_URL || (
+      process.env.NODE_ENV === "production"
+        ? "https://e-commerce-backend-rho-flame.vercel.app/api"
+        : "http://localhost:3030/api"
+    );
+    const response = await fetch(`${apiUrl.replace(/\/$/, "")}/push/subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(subscription),

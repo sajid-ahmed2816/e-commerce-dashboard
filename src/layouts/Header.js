@@ -7,8 +7,6 @@ import {
   Box,
   Menu,
   MenuItem,
-  Avatar,
-  Divider,
   IconButton,
   Badge,
   Grid
@@ -18,7 +16,6 @@ import { io } from "socket.io-client";
 import useToast from "../hooks/useToast";
 import BreadCrumb from "../components/BreadCrumb";
 import Navigation from "../Navigation";
-import { Images } from "../assets/images/Images";
 import NotificationServices from "../api/Notification/NotificationServices";
 import colors from "../assets/styles/colors";
 import useAuth from "../hooks/useAuth";
@@ -242,7 +239,6 @@ export default function Header() {
   const { pathname } = useLocation();
   const { showToast } = useToast();
   const { userLogout } = useAuth();
-  const Logo = Images.headerLogo;
 
   const currentPageObj = Navigation.find((nav) =>
     nav?.routes?.some((route) => {
@@ -308,7 +304,7 @@ export default function Header() {
 
   const markAllAsRead = async () => {
     try {
-      const result = await NotificationServices.markAllAsRead();
+      await NotificationServices.markAllAsRead();
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
@@ -339,7 +335,12 @@ export default function Header() {
 
   useEffect(() => {
     // Initialize socket
-    socketRef.current = io("http://localhost:3030", {
+    const apiUrl = process.env.REACT_APP_API_URL || (
+      process.env.NODE_ENV === "production"
+        ? "https://e-commerce-backend-rho-flame.vercel.app/api"
+        : "http://localhost:3030/api"
+    );
+    socketRef.current = io(apiUrl.replace(/\/api\/?$/, ""), {
       transports: ["websocket"],
     });
     const socket = socketRef.current;
