@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useCallback, useEffect, useState } from 'react'
 import { Box, CardMedia, Grid, Paper, Typography } from '@mui/material';
 import BlogServices from '../../../api/blogs/BlogServices';
 import UploadService from '../../../api/upload/UploadService';
@@ -70,7 +70,7 @@ function UpdateBlog() {
         setImage("");
     };
 
-    const setDefaultData = () => {
+    const setDefaultData = useCallback(() => {
         const date = moment(state.date).format("YYYY-MM-DD")
         console.log("🚀 ~ setDefaultData ~ date:", date)
         setValue("title", state?.title);
@@ -78,11 +78,11 @@ function UpdateBlog() {
         setValue("content", state?.content);
         setImage(state?.thumbnail);
         setValue("status", state?.status);
-    };
+    }, [state, setValue]);
 
     useEffect(() => {
         setDefaultData();
-    }, []);
+    }, [setDefaultData]);
 
     return (
         <Box
@@ -150,7 +150,7 @@ function UpdateBlog() {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        {image != "" ? (
+                                        {image !== "" ? (
                                             <Fragment>
                                                 <CardMedia
                                                     component={"img"}

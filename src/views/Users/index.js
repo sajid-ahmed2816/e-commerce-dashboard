@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { ErrorOutline, Search } from '@mui/icons-material';
@@ -58,7 +58,7 @@ function Users() {
     });
   };
 
-  const getUsers = async (value, pageNumber, limit) => {
+  const getUsers = useCallback(async (value, pageNumber, limit) => {
     try {
       const params = { search: value, page: pageNumber, limit: limit };
       const result = await UserServices.getUsers(params);
@@ -72,7 +72,7 @@ function Users() {
     } finally {
       setIsDataLoading(false);
     };
-  };
+  }, [showToast]);
 
   const updateUser = async (formData) => {
     setIsLoading(true);
@@ -121,7 +121,7 @@ function Users() {
       return prev;
     });
     getUsers(debouncedSearch, page, limit);
-  }, [debouncedSearch, page, limit]);
+  }, [debouncedSearch, page, limit, getUsers, setSearchParams]);
 
   return (
     <Fragment>

@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState, useRef } from 'react';
+import React, { Fragment, useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, CardMedia, Grid, IconButton, InputAdornment, Typography, colors } from '@mui/material';
 import { AccessTime, Delete, ErrorOutline, Label, Search } from '@mui/icons-material';
@@ -41,7 +41,7 @@ function Blogs() {
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
 
   // Fetch blogs (append or replace)
-  const getBlogs = async (search, pageNumber, append = false) => {
+  const getBlogs = useCallback(async (search, pageNumber, append = false) => {
     try {
       const params = { search, page: pageNumber, limit };
       const result = await BlogServices.getBlogs(params);
@@ -68,7 +68,7 @@ function Blogs() {
       setIsDataLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, [limit, showToast]);
 
   // Delete blog
   const deleteBlog = async () => {
@@ -130,7 +130,7 @@ function Blogs() {
     setHasMore(true);
     setIsDataLoading(true);
     getBlogs(debouncedSearch, 1, false);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, getBlogs, setSearchParams]);
 
   // Scroll handler for infinite loading
   useEffect(() => {
@@ -152,7 +152,7 @@ function Blogs() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [isLoadingMore, hasMore, isDataLoading, page, searchQuery]);
+  }, [isLoadingMore, hasMore, isDataLoading, page, searchQuery, getBlogs]);
 
   return (
     <Fragment>

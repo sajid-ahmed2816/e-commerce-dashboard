@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Checkbox, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { ErrorOutline, Search } from '@mui/icons-material';
@@ -55,7 +55,7 @@ function Orders() {
     });
   };
 
-  const getOrders = async (value, pageNumber, limit, category, product) => {
+  const getOrders = useCallback(async (value, pageNumber, limit, category, product) => {
     setIsDataLoading(true);
     try {
       const params = { search: value, page: pageNumber, limit: limit, category: category, product: product };
@@ -70,7 +70,7 @@ function Orders() {
     } finally {
       setIsDataLoading(false);
     }
-  };
+  }, [showToast]);
 
   const deleteOrder = async () => {
     setIsLoading(true);
@@ -141,7 +141,7 @@ function Orders() {
       return prev;
     });
     getOrders(debouncedSearch, page, limit);
-  }, [debouncedSearch, page, limit]);
+  }, [debouncedSearch, page, limit, getOrders, setSearchParams]);
 
   const currentPageIds = orders.map(p => p._id);
   const allSelectedOnCurrentPage = currentPageIds.length > 0 && currentPageIds.every(id => selectedRows.includes(id));

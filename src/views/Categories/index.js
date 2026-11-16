@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Box, CardMedia, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { ErrorOutline, ImageRounded, Search } from '@mui/icons-material';
 import { Controller, useForm } from 'react-hook-form';
@@ -72,7 +72,7 @@ function Categories() {
     });
   };
 
-  const setDefaultData = () => {
+  const setDefaultData = useCallback(() => {
     const attIds = selectedCategory?.attributes?.map(att => att._id);
     setValue("categoryName", selectedCategory?.name);
     setValue("type", selectedCategory?.type);
@@ -81,7 +81,7 @@ function Categories() {
     setImage(selectedCategory?.image);
     setValue("isPopular", selectedCategory?.isPopular);
     setValue("attributes", attIds);
-  };
+  }, [selectedCategory, setValue]);
 
   const uploadImage = async (e) => {
     const file = e.target.files[0];
@@ -157,7 +157,7 @@ function Categories() {
     }
   };
 
-  const getCategories = async (value, pageNumber, limit) => {
+  const getCategories = useCallback(async (value, pageNumber, limit) => {
     try {
       const params = { search: value, page: pageNumber, limit: limit };
       const result = await CategoryServices.getCategories(params);
@@ -173,9 +173,9 @@ function Categories() {
     } finally {
       setIsDataLoading(false);
     };
-  };
+  }, [showToast]);
 
-  const getParentCategories = async () => {
+  const getParentCategories = useCallback(async () => {
     try {
       const params = {
         page: 1,
@@ -195,9 +195,9 @@ function Categories() {
     } catch (error) {
       showToast(error, "error");
     }
-  };
+  }, [showToast]);
 
-  const getAttributes = async () => {
+  const getAttributes = useCallback(async () => {
     try {
       const params = {
         page: 1,
@@ -213,7 +213,7 @@ function Categories() {
     } catch (error) {
       showToast(error, "error");
     }
-  };
+  }, [showToast]);
 
   const deleteCategory = async () => {
     setIsCUDLoading(true);
@@ -260,7 +260,7 @@ function Categories() {
       reset();
       setImage("");
     };
-  }, [selectedCategory]);
+  }, [selectedCategory, reset, setDefaultData]);
 
   useEffect(() => {
     setSearchParams((prev) => {
@@ -270,12 +270,12 @@ function Categories() {
       return prev;
     });
     getCategories(debouncedSearch, page, limit);
-  }, [debouncedSearch, page, limit]);
+  }, [debouncedSearch, page, limit, getCategories, setSearchParams]);
 
   useEffect(() => {
     getParentCategories();
     getAttributes();
-  }, []);
+  }, [getParentCategories, getAttributes]);
 
   return (
     <Fragment>

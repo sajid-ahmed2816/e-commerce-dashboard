@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState, useRef } from 'react';
+import React, { Fragment, useCallback, useEffect, useState, useRef } from 'react';
 import { Box, CardMedia, Grid, InputAdornment, Typography, colors } from '@mui/material';
 import PrimaryButton, { SecondaryButton } from '../../components/Button';
 import Dialog from '../../components/Dialog';
@@ -53,12 +53,12 @@ function Banners() {
   const handleBannerDialog = () => setIsBannerDialogOpen((prevOpen) => !prevOpen);
   const handleConfirmationDialog = () => setIsConfirmationDialogOpen((prevOpen) => !prevOpen);
 
-  const setDefaultData = () => {
+  const setDefaultData = useCallback(() => {
     setValue("tagline", selectedBanner?.tagline);
     setValue("category", selectedBanner?.category?._id);
     setSelectedCategory(selectedBanner?.category?._id);
     setImage(selectedBanner?.image);
-  };
+  }, [selectedBanner, setValue]);
 
   const uploadImage = async (e) => {
     setIsImageLoading(true);
@@ -78,7 +78,7 @@ function Banners() {
     }
   };
 
-  const getCategories = async () => {
+  const getCategories = useCallback(async () => {
     try {
       const result = await CategoryServices.getCategories({ limit: "all" });
       if (result.status) {
@@ -88,10 +88,10 @@ function Banners() {
     } catch (error) {
       showToast(error, "error");
     }
-  };
+  }, [showToast]);
 
   // Fetch banners (append or replace)
-  const getBanners = async (search, pageNumber, append = false) => {
+  const getBanners = useCallback(async (search, pageNumber, append = false) => {
     try {
       const params = { search, page: pageNumber, limit };
       const result = await BannerServices.getBanners(params);
@@ -111,7 +111,7 @@ function Banners() {
       setIsDataLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, [limit, showToast]);
 
   const createBanner = async (formData) => {
     const obj = {
@@ -215,7 +215,7 @@ function Banners() {
       setSelectedCategory("");
       setImage("");
     }
-  }, [selectedBanner]);
+  }, [selectedBanner, reset, setDefaultData]);
 
   // Handle search (debounced)
   const searchValue = watch("search");
@@ -231,7 +231,7 @@ function Banners() {
     setHasMore(true);
     setIsDataLoading(true);
     getBanners(debouncedSearch, 1, false);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, getBanners, setSearchParams]);
 
   // Scroll handler for infinite loading
   useEffect(() => {
@@ -252,12 +252,12 @@ function Banners() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [isLoadingMore, hasMore, isDataLoading, page, searchQuery]);
+  }, [isLoadingMore, hasMore, isDataLoading, page, searchQuery, getBanners]);
 
   // Load categories on mount
   useEffect(() => {
     getCategories();
-  }, []);
+  }, [getCategories]);
 
   return (
     <Fragment>
@@ -305,7 +305,7 @@ function Banners() {
                     cursor: "pointer",
                   }}
                 >
-                  {image != "" ? (
+                  {image !== "" ? (
                     <Fragment>
                       <CardMedia
                         component={"img"}

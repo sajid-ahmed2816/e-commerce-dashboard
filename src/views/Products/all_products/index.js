@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, CardMedia, Checkbox, Chip, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors, Menu, MenuItem, Divider } from '@mui/material';
 import { ErrorOutline, Search, MoreHoriz, Edit, Delete, AddBox } from '@mui/icons-material';
@@ -97,7 +97,7 @@ function Products() {
     }
   };
 
-  const getProducts = async (value, pageNumber, limit, category) => {
+  const getProducts = useCallback(async (value, pageNumber, limit, category) => {
     setIsDataLoading(true);
     try {
       const params = { search: value, page: pageNumber, limit: limit, category: category };
@@ -114,7 +114,7 @@ function Products() {
     } finally {
       setIsDataLoading(false);
     };
-  };
+  }, [showToast]);
 
   const deleteProduct = async () => {
     setIsLoading(true);
@@ -220,7 +220,7 @@ function Products() {
       return prev;
     });
     getProducts(debouncedSearch, page, limit);
-  }, [debouncedSearch, page, limit]);
+  }, [debouncedSearch, page, limit, getProducts, setSearchParams]);
 
   const currentPageIds = products.map(p => p._id);
   const allSelectedOnCurrentPage = currentPageIds.length > 0 && currentPageIds.every(id => selectedRows.includes(id));

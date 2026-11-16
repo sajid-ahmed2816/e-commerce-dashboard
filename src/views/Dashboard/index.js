@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import { Groups, Paid, Sell, Workspaces } from "@mui/icons-material";
 import { LineChart } from "@mui/x-charts/LineChart"
@@ -10,7 +10,7 @@ function Dashboard() {
 
   const { showToast } = useToast();
 
-  const getStats = async () => {
+  const getStats = useCallback(async () => {
     try {
       const result = await DashboardServices.getStats();
       if (result.status) {
@@ -19,11 +19,11 @@ function Dashboard() {
     } catch (error) {
       showToast(error, "error");
     };
-  };
+  }, [showToast]);
 
   useEffect(() => {
     getStats();
-  }, []);
+  }, [getStats]);
 
   const { totalProducts, totalOrders, totalRevenue, totalUsers } = data;
 
@@ -62,13 +62,13 @@ function Dashboard() {
                       gap: 1
                     }}
                   >
-                    {ind == 0 ? <Workspaces sx={{ color: "#808080" }} /> : ind == 1 ? <Sell sx={{ color: "#808080" }} /> : ind == 2 ? <Paid sx={{ color: "#808080" }} /> : ind == 3 ? <Groups sx={{ color: "#808080" }} /> : ""}
+                    {ind === 0 ? <Workspaces sx={{ color: "#808080" }} /> : ind === 1 ? <Sell sx={{ color: "#808080" }} /> : ind === 2 ? <Paid sx={{ color: "#808080" }} /> : ind === 3 ? <Groups sx={{ color: "#808080" }} /> : ""}
                     <Typography
                       sx={{
                         color: "#808080"
                       }}
                     >
-                      {ind == 0 ? "Total Products" : ind == 1 ? "Total Order" : ind == 2 ? "Total Revenue" : ind == 3 ? "Total Users" : ""}
+                      {ind === 0 ? "Total Products" : ind === 1 ? "Total Order" : ind === 2 ? "Total Revenue" : ind === 3 ? "Total Users" : ""}
                     </Typography>
                   </Box>
                   <Box

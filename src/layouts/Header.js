@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment, useRef } from "react";
+import React, { useState, useEffect, Fragment, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -292,7 +292,7 @@ export default function Header() {
     setIsChangePasswordDialog(prev => !prev);
   }
 
-  const getNotificationsAndCount = async () => {
+  const getNotificationsAndCount = useCallback(async () => {
     try {
       const [result, { count }] = await Promise.all([NotificationServices.getNotifications(), NotificationServices.getUnreadCount()]);
       setNotifications(result);
@@ -300,7 +300,7 @@ export default function Header() {
     } catch (error) {
       showToast(error.message, "error");
     }
-  };
+  }, [showToast]);
 
   const markAllAsRead = async () => {
     try {
@@ -365,7 +365,7 @@ export default function Header() {
       socket.off('new-notification');
       socket.disconnect();
     };
-  }, []);
+  }, [getNotificationsAndCount, showToast]);
 
   return (
     <Fragment>

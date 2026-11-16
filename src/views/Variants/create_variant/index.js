@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, IconButton, Stack, TextField, Typography, } from "@mui/material";
 import { Close, Delete, ImageOutlined, Refresh, Save, } from "@mui/icons-material";
 import { red } from "@mui/material/colors";
@@ -262,7 +262,7 @@ function CreateVariant() {
     };
   };
 
-  const getProducts = async () => {
+  const getProducts = useCallback(async () => {
     const params = { page: 1, limit: "all" };
     try {
       const result = await ProductServices.getProducts(params);
@@ -273,7 +273,7 @@ function CreateVariant() {
     } catch (error) {
       showToast(error, "error");
     };
-  };
+  }, [showToast]);
 
   const handleSelectProduct = async (productId) => {
     const selected = products.find((item) => item._id === productId);
@@ -351,7 +351,7 @@ function CreateVariant() {
 
   useEffect(() => {
     getProducts();
-  }, []);
+  }, [getProducts]);
 
   return (
     <Box

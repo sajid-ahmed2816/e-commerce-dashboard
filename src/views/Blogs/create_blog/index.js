@@ -133,7 +133,7 @@ function CreateBlog() {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        {image != "" ? (
+                                        {image !== "" ? (
                                             <Fragment>
                                                 <CardMedia
                                                     component={"img"}

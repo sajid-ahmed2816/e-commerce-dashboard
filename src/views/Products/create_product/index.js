@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useCallback, useEffect, useState } from 'react'
 import { Box, CardMedia, Grid, Paper, Typography } from '@mui/material';
 import ProductServices from '../../../api/products/ProductServices';
 import CategoryServices from '../../../api/categories/CategoryServices';
@@ -60,7 +60,7 @@ function CreateProduct() {
     }
   };
 
-  const getCategories = async () => {
+  const getCategories = useCallback(async () => {
     try {
       const result = await CategoryServices.getCategories();
       if (result.status) {
@@ -70,7 +70,7 @@ function CreateProduct() {
     } catch (error) {
       showToast(error, "error");
     };
-  };
+  }, [showToast]);
 
   const onReset = () => {
     reset();
@@ -80,7 +80,7 @@ function CreateProduct() {
 
   useEffect(() => {
     getCategories();
-  }, []);
+  }, [getCategories]);
 
   return (
     <Box

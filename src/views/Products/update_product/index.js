@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useCallback, useEffect, useState } from 'react'
 import { Box, CardMedia, Grid, Paper, Typography } from '@mui/material';
 import ProductServices from '../../../api/products/ProductServices';
 import CategoryServices from '../../../api/categories/CategoryServices';
@@ -62,7 +62,7 @@ function UpdateProduct() {
     }
   };
 
-  const getCategories = async () => {
+  const getCategories = useCallback(async () => {
     try {
       const result = await CategoryServices.getCategories();
       if (result.status) {
@@ -72,7 +72,7 @@ function UpdateProduct() {
     } catch (error) {
       showToast(error, "error");
     }
-  };
+  }, [showToast]);
 
   const onReset = () => {
     reset();
@@ -80,19 +80,19 @@ function UpdateProduct() {
     setSelectedCategory("");
   };
 
-  const setDefaultData = () => {
+  const setDefaultData = useCallback(() => {
     setValue("name", state?.name);
     setThumbnail(state?.thumbnail);
     setSelectedCategory(state?.category?._id);
     setValue("category", state?.category?._id);
     setValue("description", state?.description);
     setValue("isFeatured", state?.isFeatured);
-  };
+  }, [state, setValue]);
 
   useEffect(() => {
     getCategories();
     setDefaultData();
-  }, [state]);
+  }, [state, getCategories, setDefaultData]);
 
   return (
     <Box

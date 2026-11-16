@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Chip, colors, Grid, InputAdornment, Table, TableBody, TableContainer, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
@@ -52,7 +52,7 @@ function Variants() {
     });
   };
 
-  const getAllVaraints = async (value, pageNumber, limit, product) => {
+  const getAllVaraints = useCallback(async (value, pageNumber, limit, product) => {
     setIsDataLoading(true);
     try {
       const params = { search: value, page: pageNumber, limit: limit, product: product };
@@ -67,7 +67,7 @@ function Variants() {
     } finally {
       setIsDataLoading(false);
     }
-  };
+  }, [showToast]);
 
   const deleteCategory = async () => {
     setIsLoading(true);
@@ -98,7 +98,7 @@ function Variants() {
       return prev;
     });
     getAllVaraints(debouncedSearch, page, limit);
-  }, [debouncedSearch, page, limit]);
+  }, [debouncedSearch, page, limit, getAllVaraints, setSearchParams]);
 
   return (
     <Fragment>

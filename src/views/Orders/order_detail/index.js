@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -30,7 +30,7 @@ function OrderDetail() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     setLoading(true);
     try {
       const result = await OrderServices.getOrderDetailById(id); // adjust method name
@@ -45,11 +45,11 @@ function OrderDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showToast, navigate]);
 
   useEffect(() => {
     fetchOrder();
-  }, [id]);
+  }, [fetchOrder]);
 
   // Status chip color mapping
   const statusColor = {

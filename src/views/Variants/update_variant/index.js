@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, IconButton, Stack, TextField, Typography, } from "@mui/material";
 import { Close, ImageOutlined, Save, } from "@mui/icons-material";
@@ -113,7 +113,7 @@ function UpdateVariant() {
     )).filter(Boolean).join(" / ") || "Variant"
   };
 
-  const loadProductAttributes = async (selected, existingAttributes = []) => {
+  const loadProductAttributes = useCallback(async (selected, existingAttributes = []) => {
     const categoryAttributeIds = (selected.category?.attributes || []).map((item) =>
       String(typeof item === "object" ? item._id : item)
     );
@@ -201,7 +201,7 @@ function UpdateVariant() {
     } finally {
       setIsAttributesLoading(false);
     }
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!variant) {
@@ -263,7 +263,7 @@ function UpdateVariant() {
     }
   };
 
-  const getProducts = async () => {
+  const getProducts = useCallback(async () => {
     const params = { page: 1, limit: "all" };
     try {
       const result = await ProductServices.getProducts(params);
@@ -274,9 +274,9 @@ function UpdateVariant() {
     } catch (error) {
       showToast(error, "error");
     };
-  };
+  }, [showToast]);
 
-  const getProductVariant = async () => {
+  const getProductVariant = useCallback(async () => {
     setIsLoading(true);
 
     try {
@@ -324,7 +324,7 @@ function UpdateVariant() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, loadProductAttributes, setValue, showToast]);
 
   useEffect(() => {
     if (!productsLoadedRef.current) {
@@ -335,7 +335,7 @@ function UpdateVariant() {
       variantLoadedRef.current = true;
       getProductVariant();
     };
-  }, [id]);
+  }, [id, getProducts, getProductVariant]);
 
   return (
     <Box

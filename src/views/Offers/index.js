@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Box, Grid, InputAdornment, Table, TableBody, TableContainer, Typography, colors } from '@mui/material';
 import { ErrorOutline, Search } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
@@ -65,7 +65,7 @@ function Offers() {
 		});
 	};
 
-	const setDefaultData = () => {
+	const setDefaultData = useCallback(() => {
 		setValue("offerName", selectedOffer?.name);
 		setValue("color", selectedOffer?.color);
 		setSelectedDiscountType(selectedOffer?.discountType);
@@ -76,9 +76,9 @@ function Offers() {
 		setValue("endDate", endDate);
 		setSelectedCategory(selectedOffer?.category?._id);
 		setValue("category", selectedOffer?.category?._id);
-	};
+	}, [selectedOffer, setValue]);
 
-	const getCategories = async () => {
+	const getCategories = useCallback(async () => {
 		try {
 			const result = await CategoryServices.getCategories();
 			if (result.status) {
@@ -88,7 +88,7 @@ function Offers() {
 		} catch (error) {
 			showToast(error, "error");
 		};
-	};
+	}, [showToast]);
 
 	const createOffer = async (formData) => {
 		setIsLoading(true);
@@ -143,7 +143,7 @@ function Offers() {
 		};
 	};
 
-	const getOffers = async (value, pageNumber, limit) => {
+	const getOffers = useCallback(async (value, pageNumber, limit) => {
 		try {
 			const params = { search: value, page: pageNumber, limit: limit };
 			const result = await OfferServices.getOffers(params);
@@ -159,7 +159,7 @@ function Offers() {
 		} finally {
 			setIsDataLoading(false);
 		};
-	};
+	}, [showToast]);
 
 	const deleteOffer = async () => {
 		setIsLoading(true);
@@ -201,7 +201,7 @@ function Offers() {
 
 	useEffect(() => {
 		getCategories();
-	}, []);
+	}, [getCategories]);
 
 	useEffect(() => {
 		if (selectedOffer != null) {
@@ -209,7 +209,7 @@ function Offers() {
 		} else {
 			reset();
 		};
-	}, [selectedOffer]);
+	}, [selectedOffer, reset, setDefaultData]);
 
 	useEffect(() => {
 		setSearchParams((prev) => {
@@ -219,7 +219,7 @@ function Offers() {
 			return prev;
 		});
 		getOffers(debouncedSearch, page, limit);
-	}, [debouncedSearch, page, limit]);
+	}, [debouncedSearch, page, limit, getOffers, setSearchParams]);
 
 	return (
 		<Fragment>
@@ -285,7 +285,6 @@ function Offers() {
 							p: "14px",
 							lineHeight: 0,
 							outline: "none",
-							border: "none",
 							border: "1px solid rgba(0, 0, 0, 0.23)",
 							borderRadius: "4px",
 							position: "relative"

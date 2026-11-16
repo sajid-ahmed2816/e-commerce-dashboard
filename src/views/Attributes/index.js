@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Box, colors, Divider, Grid, Paper, Stack, Typography, } from "@mui/material";
 import { Add, ErrorOutline } from "@mui/icons-material";
 import { useForm } from 'react-hook-form';
@@ -111,7 +111,7 @@ function Attributes() {
     setIsAttributeValueDialogOpen(true);
   };
 
-  const getAttributes = async () => {
+  const getAttributes = useCallback(async () => {
     try {
       const result = await AttributeServices.getAttributes({ page: 1, limit: "all" });
       if (result.status) {
@@ -120,7 +120,7 @@ function Attributes() {
     } catch (error) {
       showToast(error, "error");
     };
-  };
+  }, [showToast]);
 
   const getAttributeValues = async (attributeId) => {
     if (!attributeId) {
@@ -246,7 +246,7 @@ function Attributes() {
 
   useEffect(() => {
     getAttributes();
-  }, []);
+  }, [getAttributes]);
 
   return (
     <Fragment>
