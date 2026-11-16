@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import {
   BrowserRouter,
-  Outlet,
+  Navigate,
   Routes,
   Route,
 } from "react-router-dom";
@@ -10,6 +10,7 @@ import "@fontsource/comfortaa";
 import adminRoutes from "./routes/admin.routes";
 import { Layout } from "./layouts/Layout";
 import publicRoutes from "./routes/public.routes";
+import { PublicOnly, RequireAdmin } from "./routes/RouteGuards";
 import colors from "./assets/styles/colors";
 import { registerServiceWorker, subscribeToPush } from './push-notification';
 import "./App.css";
@@ -48,16 +49,19 @@ function App() {
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Routes>
-          <Route element={<Layout />}>
-            {adminRoutes.map((item, index) => (
-              <Route key={index} path={item.path} element={item.component} />
-            ))}
+          <Route element={<RequireAdmin />}>
+            <Route element={<Layout />}>
+              {adminRoutes.map((item, index) => (
+                <Route key={index} path={item.path} element={item.component} />
+              ))}
+            </Route>
           </Route>
-          <Route element={<Outlet />}>
+          <Route element={<PublicOnly />}>
             {publicRoutes.map((item, index) => (
               <Route key={index} path={item.path} element={item.component} />
             ))}
           </Route>
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
